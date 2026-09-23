@@ -1,0 +1,1851 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>صانع المنظّم — مولّد سكربتات AutoHotkey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E8ECF1; --panel:#FFFFFF; --panel-2:#F4F6F9; --ink:#17202D; --muted:#5A6677; --line:#D2D9E2;
+  --accent:#2C57E0; --accent-ink:#FFFFFF; --accent-soft:#E3E9FC; --danger:#C2372F; --warn-bg:#FFF4DC; --warn-ink:#7A4E00;
+  --key-top:#FDFDFE; --key-side:#B9C2CE; --key-ink:#1D2633;
+  --code-bg:#111A29; --code-ink:#D5DDEA; --code-muted:#6D7C93;
+  --radius:10px;
+  --ui:"IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E131B; --panel:#161D28; --panel-2:#1B2330; --ink:#E4E9F0; --muted:#8F9CAE; --line:#2A3443;
+    --accent:#7896FF; --accent-ink:#0B1020; --accent-soft:#1F2A47; --danger:#F07269; --warn-bg:#33290F; --warn-ink:#F3CD7A;
+    --key-top:#253247; --key-side:#070B12; --key-ink:#E8EDF5;
+    --code-bg:#0A0F18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E131B; --panel:#161D28; --panel-2:#1B2330; --ink:#E4E9F0; --muted:#8F9CAE; --line:#2A3443;
+  --accent:#7896FF; --accent-ink:#0B1020; --accent-soft:#1F2A47; --danger:#F07269; --warn-bg:#33290F; --warn-ink:#F3CD7A;
+  --key-top:#253247; --key-side:#070B12; --key-ink:#E8EDF5;
+  --code-bg:#0A0F18;
+}
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+*,*::before,*::after{ box-sizing:inherit; }
+body{ margin:0; background:var(--bg); color:var(--ink); font:15px/1.6 var(--ui); -webkit-font-smoothing:antialiased; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ---------- Header ---------- */
+.top{ max-width:1500px; margin:0 auto; padding:26px 20px 18px; display:flex; flex-wrap:wrap; gap:18px 28px; align-items:flex-end; justify-content:space-between; }
+.brand h1{ margin:0; font-size:28px; line-height:1.25; font-weight:700; letter-spacing:-.2px; }
+.brand p{ margin:6px 0 0; color:var(--muted); max-width:58ch; }
+.hero-key{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:15px; }
+.hero-key .caps{ gap:8px; }
+.hero-key .cap{ font-size:20px; min-width:54px; padding:12px 16px 14px; border-radius:11px; box-shadow:0 5px 0 var(--key-side), 0 7px 14px rgba(10,20,40,.18); }
+.toolbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+
+.btn{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--panel); padding:7px 13px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; white-space:nowrap; }
+.btn:hover{ border-color:var(--accent); }
+.btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.btn.primary:hover{ filter:brightness(1.08); }
+.btn.ghost{ background:transparent; }
+.btn.danger{ color:var(--danger); }
+select.btn{ padding-inline-end:28px; }
+
+/* ---------- Layout ---------- */
+.app{ max-width:1500px; margin:0 auto; padding:0 20px 40px; display:grid; grid-template-columns:190px minmax(0,1.1fr) minmax(0,1fr); gap:20px; align-items:start; }
+.nav{ position:sticky; top:calc(env(safe-area-inset-top,0px) + 14px); display:flex; flex-direction:column; gap:2px; }
+.nav button{ display:flex; justify-content:space-between; align-items:center; gap:8px; text-align:start; background:transparent; border:0; border-radius:8px; padding:9px 12px; cursor:pointer; color:var(--muted); font-weight:500; }
+.nav button:hover{ color:var(--ink); background:var(--panel-2); }
+.nav button[aria-current="true"]{ background:var(--panel); color:var(--ink); box-shadow:inset -3px 0 0 var(--accent); }
+.nav .count{ font-size:12px; min-width:22px; text-align:center; padding:0 6px; border-radius:20px; background:var(--panel-2); color:var(--muted); }
+.nav button[aria-current="true"] .count{ background:var(--accent-soft); color:var(--accent); }
+
+.editor{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px 28px; min-height:60vh; }
+.editor h2{ margin:0 0 4px; font-size:21px; }
+.editor h3{ margin:26px 0 4px; font-size:16px; }
+.editor .lead{ margin:0 0 18px; color:var(--muted); max-width:64ch; }
+.editor .sublead{ margin:0 0 12px; color:var(--muted); font-size:14px; }
+
+.fields{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px; }
+.field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.field.wide{ grid-column:1 / -1; }
+.lab{ font-size:13px; font-weight:600; color:var(--muted); }
+.hint{ font-size:12.5px; color:var(--muted); }
+.inp{ width:100%; border:1px solid var(--line); background:var(--panel-2); border-radius:8px; padding:8px 10px; min-width:0; }
+.inp:focus{ border-color:var(--accent); background:var(--panel); outline:none; box-shadow:0 0 0 3px var(--accent-soft); }
+textarea.inp{ resize:vertical; min-height:70px; line-height:1.55; }
+.ltr{ direction:ltr; text-align:left; }
+.mono{ font-family:var(--mono); font-size:13px; }
+.check{ display:flex; gap:9px; align-items:flex-start; cursor:pointer; padding:4px 0; }
+.check input{ margin-top:5px; accent-color:var(--accent); width:16px; height:16px; flex:none; }
+.check small{ display:block; color:var(--muted); font-size:12.5px; }
+
+/* keycaps */
+.hk{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.hk .inp{ width:120px; flex:none; }
+.keycap{ background:none; border:1px dashed transparent; border-radius:10px; padding:4px 6px 8px; cursor:pointer; min-height:44px; }
+.keycap:hover{ border-color:var(--line); }
+.keycap.listening{ border-color:var(--accent); background:var(--accent-soft); }
+.caps{ display:inline-flex; gap:5px; align-items:center; direction:ltr; }
+.cap{ display:inline-block; min-width:32px; text-align:center; padding:5px 9px 6px; border-radius:7px; background:var(--key-top); color:var(--key-ink); border:1px solid var(--line); box-shadow:0 3px 0 var(--key-side); font:600 12.5px/1.2 var(--mono); }
+.plus{ color:var(--muted); font-size:12px; }
+.cap-empty{ color:var(--muted); font-size:13px; }
+.cap-listen{ color:var(--accent); font-weight:600; font-size:13px; padding:6px 4px; display:inline-block; }
+
+/* list rows */
+.list{ display:flex; flex-direction:column; gap:10px; }
+.row{ display:flex; gap:10px; align-items:flex-start; padding:12px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); }
+.row-fields{ flex:1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; min-width:0; }
+.row-ctl{ display:flex; flex-direction:column; gap:4px; }
+.ib{ width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--line); background:var(--panel-2); border-radius:7px; cursor:pointer; font-size:13px; color:var(--muted); }
+.ib:hover:not(:disabled){ color:var(--ink); border-color:var(--accent); }
+.ib.danger:hover:not(:disabled){ color:var(--danger); border-color:var(--danger); }
+.ib:disabled{ opacity:.35; cursor:default; }
+.add{ align-self:flex-start; border:1px dashed var(--line); background:transparent; border-radius:8px; padding:8px 14px; cursor:pointer; color:var(--accent); font-weight:600; }
+.add:hover{ border-color:var(--accent); background:var(--accent-soft); }
+.empty{ margin:0; color:var(--muted); font-size:14px; }
+
+.group{ border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-2); padding:14px; margin-bottom:14px; }
+.group-head{ display:flex; gap:10px; align-items:flex-end; margin-bottom:12px; }
+.group-head .field{ flex:1; }
+.group-head .ctl{ display:flex; gap:4px; }
+
+.tip{ margin-top:18px; padding:12px 14px; border-radius:8px; background:var(--panel-2); color:var(--muted); font-size:13.5px; border:1px solid var(--line); }
+.tip code{ font-family:var(--mono); font-size:12.5px; background:var(--panel); padding:1px 5px; border-radius:4px; direction:ltr; display:inline-block; color:var(--ink); }
+.fieldgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:2px 14px; }
+.range-row{ display:flex; gap:10px; align-items:center; }
+.range-row input[type=range]{ flex:1; accent-color:var(--accent); }
+.range-row output{ font-family:var(--mono); font-size:13px; min-width:34px; }
+
+/* ---------- Output panel ---------- */
+.out{ position:sticky; top:calc(env(safe-area-inset-top,0px) + 14px); display:flex; flex-direction:column; height:calc(100dvh - 40px); min-height:480px; background:var(--code-bg); color:var(--code-ink); border-radius:var(--radius); overflow:hidden; }
+.out-head{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.08); }
+.tabs{ display:flex; gap:2px; background:rgba(255,255,255,.06); border-radius:8px; padding:3px; }
+.tabs button{ border:0; background:transparent; color:var(--code-muted); padding:5px 12px; border-radius:6px; cursor:pointer; font-size:13.5px; font-weight:500; }
+.tabs button[aria-selected="true"]{ background:rgba(255,255,255,.12); color:#fff; }
+.out-actions{ margin-inline-start:auto; display:flex; gap:6px; flex-wrap:wrap; }
+.out .btn{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12); color:var(--code-ink); }
+.out .btn:hover{ border-color:#7896FF; }
+.out .btn.primary{ background:#4B6FF0; border-color:#4B6FF0; color:#fff; }
+.fname{ display:flex; align-items:center; gap:6px; padding:8px 12px; font-size:13px; color:var(--code-muted); border-bottom:1px solid rgba(255,255,255,.08); }
+.fname input{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:6px; padding:4px 8px; width:180px; direction:ltr; font-family:var(--mono); font-size:12.5px; }
+.fname .stats{ margin-inline-start:auto; font-family:var(--mono); font-size:12px; }
+.warns{ margin:0; padding:10px 14px 10px 14px; background:#3A2D0E; color:#F5D48B; font-size:13px; list-style:none; display:flex; flex-direction:column; gap:3px; max-height:130px; overflow:auto; }
+.warns:empty{ display:none; }
+.warns li::before{ content:"⚠ "; }
+.code{ flex:1; overflow:auto; margin:0; padding:14px 16px 30px; direction:ltr; text-align:left; font:12.5px/1.65 var(--mono); tab-size:4; white-space:pre; }
+.t-c{ color:#6F819C; font-style:italic; } .t-s{ color:#A8D89A; } .t-d{ color:#F28FAD; } .t-h{ color:#FFC56B; font-weight:600; } .t-k{ color:#C59CFF; } .t-f{ color:#79C0FF; }
+
+.preview{ flex:1; overflow:auto; padding:24px 18px; background:
+  radial-gradient(circle at 20% 10%, rgba(120,150,255,.18), transparent 40%),
+  radial-gradient(circle at 80% 90%, rgba(60,200,180,.12), transparent 45%), #1A2436; }
+.preview p{ margin:0 0 14px; color:#B7C3D6; font-size:13.5px; }
+.ctx{ width:min(300px,100%); background:#F7F8FA; color:#1B1F26; border:1px solid #C9CED6; border-radius:8px; padding:4px; box-shadow:0 10px 30px rgba(0,0,0,.35); font-size:13.5px; }
+.mi{ display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:5px; cursor:default; user-select:none; }
+.mi:hover{ background:#DCE5FA; }
+.mi .chk{ width:14px; flex:none; color:#2C57E0; font-weight:700; }
+.mi .mt{ flex:1; } .mi .sfx{ color:#7A8394; direction:ltr; unicode-bidi:isolate; }
+.mi .arr{ color:#7A8394; }
+.sep{ height:1px; background:#D8DCE3; margin:4px 6px; }
+.subbox{ margin:2px 22px 4px 4px; border-inline-start:2px solid #C9D3EA; padding-inline-start:4px; }
+
+@media (max-width:1150px){
+  .app{ grid-template-columns:1fr; }
+  .nav{ position:static; flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:2px; }
+  .nav button{ flex:none; }
+  .nav button[aria-current="true"]{ box-shadow:inset 0 -3px 0 var(--accent); }
+  .out{ position:static; height:75vh; }
+}
+@media (max-width:640px){
+  .top{ padding-top:18px; }
+  .brand h1{ font-size:23px; }
+  .editor{ padding:18px 14px 22px; }
+  .fields,.row-fields{ grid-template-columns:1fr; }
+  .row{ flex-direction:column; }
+  .row-ctl{ flex-direction:row; align-self:flex-end; }
+  .hero-key .cap{ font-size:16px; min-width:44px; padding:9px 12px 11px; }
+}
+@media (prefers-reduced-motion: no-preference){
+  .keycap.listening .cap-listen{ animation:blink 1.1s ease-in-out infinite; }
+  @keyframes blink{ 50%{ opacity:.45; } }
+}
+.ovprev-wrap{ padding:22px; border-radius:var(--radius); background:linear-gradient(135deg,#27496d 0%,#3d3a6b 55%,#1f5c63 100%); overflow-x:auto; }
+.ovprev{ margin:0; display:inline-block; background:rgba(0,0,0,.35); padding:8px 10px; border-radius:4px; line-height:1.3; white-space:pre; text-align:left; }
+.screen{ position:relative; width:100%; max-width:540px; aspect-ratio:16/9; border:7px solid #1C2230; border-radius:9px; overflow:hidden; direction:ltr; touch-action:none;
+  background:linear-gradient(135deg,#27496d 0%,#3d3a6b 55%,#1f5c63 100%); }
+.screen .task{ position:absolute; left:0; right:0; bottom:0; height:4.4%; background:rgba(14,18,26,.9); }
+.ov-block{ position:absolute; border:1.5px solid rgba(255,255,255,.9); border-radius:3px; cursor:grab; touch-action:none;
+  background:repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 1px, transparent 1px 5px), rgba(0,0,0,.45); background-clip:padding-box; }
+.ov-block:active{ cursor:grabbing; }
+.ov-block:focus-visible{ outline:2px solid #FFC56B; outline-offset:2px; }
+.corners{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.corners .btn{ font-size:13px; padding:5px 10px; }
+.ovorder{ display:flex; flex-direction:column; gap:4px; max-width:520px; }
+.ovrow{ display:flex; align-items:center; gap:8px; padding:5px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.ovrow.off{ opacity:.55; }
+.ovrow input{ accent-color:var(--accent); width:16px; height:16px; }
+.ovname{ flex:1; cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+.ovname .ven{ font-family:var(--mono); font-size:12.5px; color:var(--muted); direction:ltr; }
+.ovrow .ib{ width:26px; height:26px; }
+.report{ position:relative; border:1px solid var(--line); border-inline-start:4px solid var(--accent); background:var(--accent-soft); border-radius:8px; padding:12px 14px 12px 44px; margin-bottom:18px; font-size:14px; }
+.report.ok{ border-inline-start-color:#2E9E6A; }
+.report p{ margin:6px 0 0; }
+.report .ib{ position:absolute; top:8px; left:8px; }
+.report details{ margin-top:6px; } .report summary{ cursor:pointer; color:var(--muted); }
+.report ul{ margin:6px 0 0; padding-inline-start:20px; font-size:13px; direction:rtl; }
+.toast{ position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 20px); left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:10; }
+.toast.show{ opacity:1; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1 id="brandName">صانع المنظّم</h1>
+    <p>صمّم منظّم AutoHotkey الخاص فيك: قائمة سريعة، مواقع وبرامج، اختصارات، وشريط معلومات. كل تعديل يظهر فوراً في الكود، وبعدها نزّل ملف ‎.ahk‎ جاهز للتشغيل.</p>
+  </div>
+  <div class="hero-key" aria-live="polite"><span>قائمتك تظهر بضغطة</span><span id="heroCaps"></span></div>
+  <div class="toolbar">
+    <label class="sr" for="preset">ابدأ من قالب</label>
+    <select id="preset" class="btn">
+      <option value="">ابدأ من قالب…</option>
+      <option value="example">قالب كامل (مثال)</option>
+      <option value="empty">منظّم فارغ</option>
+    </select>
+    <button class="btn" id="importBtn" type="button">فتح ملف ‎.ahk‎ أو إعدادات</button>
+    <input type="file" id="importFile" accept=".ahk,.json,.txt" hidden>
+    <button class="btn" id="exportBtn" type="button">حفظ الإعدادات</button>
+  </div>
+</header>
+
+<main class="app">
+  <nav class="nav" id="nav" aria-label="أقسام الإعدادات"></nav>
+  <section class="editor" id="editor" aria-live="off"></section>
+  <section class="out" aria-label="الناتج">
+    <div class="out-head">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tabCode" aria-selected="true" type="button">الكود</button>
+        <button role="tab" id="tabPrev" aria-selected="false" type="button">معاينة القائمة</button>
+      </div>
+      <div class="out-actions">
+        <button class="btn" id="copyBtn" type="button">نسخ الكود</button>
+        <button class="btn primary" id="dlBtn" type="button">تنزيل الملف</button>
+      </div>
+    </div>
+    <div class="fname"><label for="fileName">اسم الملف</label><input id="fileName" value="MyOrganizer"><span>.ahk</span><span class="stats" id="stats"></span></div>
+    <ul class="warns" id="warns"></ul>
+    <pre class="code" id="code" tabindex="0" aria-label="كود AutoHotkey الناتج"></pre>
+    <div class="preview" id="preview" hidden></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   إعدادات المنتج (عدّلها قبل البيع)
+   ============================================================ */
+const BRAND = { name: 'صانع المنظّم', version: '1.0' };
+
+/* ============================================================
+   أدوات عامة
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+let uid = 0;
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (['value', 'checked', 'disabled', 'hidden', 'type'].includes(k)) el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return el;
+}
+const clone = o => JSON.parse(JSON.stringify(o));
+const one = s => String(s ?? '').replace(/[\r\n]+/g, ' ').trim();
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   القوالب
+   ============================================================ */
+/* الشريط العائم: كل معلومة بالإنجليزي، مع ترتيب يختاره المستخدم */
+const OV = {
+  date:       { ar: 'التاريخ',        en: 'Date',       icon: '📅', sample: 'Wed, 23 Sep 2026' },
+  time:       { ar: 'الوقت',          en: 'Time',       icon: '🕒', sample: '14:05:33' },
+  hijri:      { ar: 'التاريخ الهجري', en: 'Hijri',      icon: '🌙', sample: '11 Rabi II 1448' },
+  uptime:     { ar: 'مدة التشغيل',    en: 'Uptime',     icon: '⏳', sample: '01:22:10' },
+  battery:    { ar: 'البطارية',       en: 'Battery',    icon: '🔋', sample: '85% (plugged in)' },
+  volume:     { ar: 'الصوت',          en: 'Volume',     icon: '🔊', sample: '40%' },
+  mic:        { ar: 'المايك',         en: 'Mic',        icon: '🎤', sample: 'On' },
+  lang:       { ar: 'لغة الكيبورد',   en: 'Keyboard',   icon: '🌐', sample: 'EN' },
+  caps:       { ar: 'Caps Lock',      en: 'Caps Lock',  icon: '🔠', sample: 'OFF' },
+  num:        { ar: 'Num Lock',       en: 'Num Lock',   icon: '🔢', sample: 'ON' },
+  brightness: { ar: 'الإضاءة',        en: 'Brightness', icon: '☀️', sample: '70%' },
+  disk:       { ar: 'مساحة القرص C',  en: 'Disk C',    icon: '💾', sample: '120.5 GB free' },
+  clipboard:  { ar: 'آخر نص منسوخ',   en: 'Clipboard',  icon: '📋', sample: 'https://example.com/page' },
+};
+const OV_KEYS = Object.keys(OV);
+const allFields = v => Object.fromEntries(OV_KEYS.map(k => [k, v]));
+
+const BASE = {
+  v: 2, title: 'منظّمي', author: '',
+  menuKey: 'F9', menuWildcard: true,
+  browserPath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  startup: { enabled: true, text: 'تم تشغيل المنظّم ✅' },
+  notify: true,
+  scripts: [], submenus: [],
+  extras: { reload: true, edit: false, exit: false, close: true, startup: true },
+  tray: true, custom: '',
+  media: { enabled: false, next: '!Right', prev: '!Left', play: '!s' },
+  groups: [], snippets: [],
+  overlay: {
+    enabled: false, px: 0, py: 1, font: 'Consolas', fontSize: 10, color: '#FFFFFF', opacity: 210, width: 400,
+    toggleKey: '^+o', interval: 1000, clipMax: 40, icons: false, time24: true,
+    order: OV_KEYS.slice(), fields: Object.assign(allFields(true), { mic: false, num: false }),
+  },
+};
+
+const PRESETS = {
+  empty: clone(BASE),
+  example: Object.assign(clone(BASE), {
+    title: 'منظّمي',
+    scripts: [
+      { label: 'سكربت إضافي', suffix: '', path: '%A_MyDocuments%\\AutoHotkey\\my-script.ahk' },
+    ],
+    submenus: [
+      { title: '🌐 مواقعي', items: [
+        { label: '▶️ YouTube', target: 'https://www.youtube.com/' },
+        { label: '✉️ Gmail', target: 'https://mail.google.com/' },
+        { label: '📂 Google Drive', target: 'https://drive.google.com/' },
+        { label: '🔤 Google Translate', target: 'https://translate.google.com/' },
+      ]},
+      { title: '💻 برامجي', items: [
+        { label: '📝 المفكرة', target: 'notepad.exe' },
+        { label: '🧮 الحاسبة', target: 'calc.exe' },
+        { label: '📁 مستكشف الملفات', target: 'explorer.exe' },
+        { label: '📊 مدير المهام', target: 'taskmgr.exe' },
+      ]},
+      { title: '🎵 الموسيقى', items: [
+        { label: '🎧 Spotify', target: 'https://open.spotify.com/' },
+        { label: '☁️ SoundCloud', target: 'https://soundcloud.com/discover' },
+        { label: '🎵 YouTube Music', target: 'https://music.youtube.com/' },
+      ]},
+    ],
+    media: { enabled: true, next: '!Right', prev: '!Left', play: '!s' },
+    groups: [{ kind: 'hotstring', trigger: 'work///', newWindow: true,
+      targets: ['https://mail.google.com/', 'https://calendar.google.com/', 'https://drive.google.com/'].join('\n') }],
+    snippets: [{ kind: 'hotstring', trigger: 'sig///', instant: true, pre: '', text: 'مع خالص التحية،\nاسمك هنا' }],
+    overlay: Object.assign(clone(BASE.overlay), { enabled: true }),
+  }),
+};
+
+function normalize(o) {
+  const s = Object.assign(clone(BASE), o || {});
+  s.startup = Object.assign(clone(BASE.startup), s.startup || {});
+  s.extras = Object.assign(clone(BASE.extras), s.extras || {});
+  s.media = Object.assign(clone(BASE.media), s.media || {});
+  const src = (o && o.overlay) || {};
+  const ov = Object.assign(clone(BASE.overlay), src);
+  // ترقية ملفات الإعدادات القديمة
+  if (src.corner && src.px == null) { ov.px = src.corner.endsWith('r') ? 1 : 0; ov.py = src.corner.startsWith('b') ? 1 : 0; }
+  const f = Object.assign({}, src.fields || {});
+  if ('dateText' in f) f.date = f.dateText;
+  if ('dateNum' in f) f.time = f.dateNum;
+  ov.fields = src.fields ? Object.assign(allFields(false), f) : clone(BASE.overlay.fields);
+  const order = Array.isArray(src.order) ? src.order.filter(k => OV_KEYS.includes(k)) : [];
+  ov.order = order.concat(OV_KEYS.filter(k => !order.includes(k)));
+  ov.px = Math.min(1, Math.max(0, Number(ov.px) || 0));
+  ov.py = Math.min(1, Math.max(0, Number(ov.py) || 0));
+  s.overlay = ov;
+  for (const k of ['scripts', 'submenus', 'groups', 'snippets']) if (!Array.isArray(s[k])) s[k] = [];
+  if (typeof s.custom !== 'string') s.custom = '';
+  s.tray = s.tray !== false;
+  s.submenus.forEach(m => { if (!Array.isArray(m.items)) m.items = []; });
+  return s;
+}
+
+/* ============================================================
+   الحفظ التلقائي
+   ============================================================ */
+const STORE = 'ahk-organizer-builder:v2';
+function loadDraft() { try { const r = localStorage.getItem(STORE); return r ? normalize(JSON.parse(r)) : null; } catch { return null; } }
+function saveDraft() { try { localStorage.setItem(STORE, JSON.stringify({ state: S, file: $('#fileName').value })); } catch {} }
+let S;
+{
+  let d = null;
+  try { const r = localStorage.getItem(STORE); if (r) d = JSON.parse(r); } catch {}
+  S = d && d.state ? normalize(d.state) : normalize(clone(PRESETS.example));
+  if (d && d.file) $('#fileName').value = d.file;
+}
+
+/* ============================================================
+   الاختصارات: تحويل وعرض
+   ============================================================ */
+const CODE_MAP = {
+  ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down', Space: 'Space', Enter: 'Enter', Tab: 'Tab',
+  Escape: 'Esc', Backspace: 'Backspace', Delete: 'Delete', Insert: 'Insert', Home: 'Home', End: 'End', PageUp: 'PgUp', PageDown: 'PgDn',
+  Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: '`;', Quote: "'", Comma: ',', Period: '.', Slash: '/',
+  Backquote: 'SC029', NumpadAdd: 'NumpadAdd', NumpadSubtract: 'NumpadSub', NumpadMultiply: 'NumpadMult', NumpadDivide: 'NumpadDiv',
+  NumpadEnter: 'NumpadEnter', NumpadDecimal: 'NumpadDot', Pause: 'Pause', PrintScreen: 'PrintScreen', ScrollLock: 'ScrollLock',
+  CapsLock: 'CapsLock', ContextMenu: 'AppsKey', MediaPlayPause: 'Media_Play_Pause', MediaTrackNext: 'Media_Next', MediaTrackPrevious: 'Media_Prev',
+};
+function codeToAhk(code) {
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3).toLowerCase();
+  if (/^Digit\d$/.test(code)) return code.slice(5);
+  if (/^F\d{1,2}$/.test(code)) return code;
+  if (/^Numpad\d$/.test(code)) return code;
+  return CODE_MAP[code] || null;
+}
+const KEY_PRETTY = { Left: '←', Right: '→', Up: '↑', Down: '↓', '`;': ';', SC029: '`', PgUp: 'Page Up', PgDn: 'Page Down', Esc: 'Esc' };
+function parseHotkey(hk) {
+  const m = String(hk || '').trim().match(/^([*~$]*)([\^!+#<>]*)(.*)$/);
+  if (!m) return null;
+  const mods = m[2].replace(/[<>]/g, '');
+  return { prefix: m[1], mods, key: m[3] };
+}
+function renderCaps(hk) {
+  const p = parseHotkey(hk);
+  if (!p || !p.key) return [h('span', { class: 'cap-empty', text: 'اضغط لتسجيل اختصار' })];
+  const names = [];
+  if (p.mods.includes('^')) names.push('Ctrl');
+  if (p.mods.includes('!')) names.push('Alt');
+  if (p.mods.includes('+')) names.push('Shift');
+  if (p.mods.includes('#')) names.push('Win');
+  let k = KEY_PRETTY[p.key] || (p.key.length === 1 ? p.key.toUpperCase() : p.key);
+  names.push(k);
+  const wrap = h('span', { class: 'caps' });
+  names.forEach((n, i) => { if (i) wrap.append(h('span', { class: 'plus', text: '+' })); wrap.append(h('span', { class: 'cap', text: n })); });
+  return [wrap];
+}
+function prettyHotkey(hk) {
+  const p = parseHotkey(hk); if (!p || !p.key) return '';
+  const n = [];
+  if (p.mods.includes('^')) n.push('Ctrl'); if (p.mods.includes('!')) n.push('Alt');
+  if (p.mods.includes('+')) n.push('Shift'); if (p.mods.includes('#')) n.push('Win');
+  n.push(KEY_PRETTY[p.key] || (p.key.length === 1 ? p.key.toUpperCase() : p.key));
+  return n.join(' + ');
+}
+
+/* ============================================================
+   عناصر الإدخال
+   ============================================================ */
+function textField(label, obj, key, o = {}) {
+  const id = 'f' + (++uid);
+  const tag = o.multiline ? 'textarea' : 'input';
+  const input = h(tag, { id, class: 'inp' + (o.ltr ? ' ltr mono' : ''), placeholder: o.placeholder || '', dir: o.ltr ? 'ltr' : null,
+    rows: o.multiline ? (o.rows || 3) : null, type: o.type || null, min: o.min ?? null, max: o.max ?? null,
+    oninput: e => { obj[key] = o.type === 'number' ? Number(e.target.value) : e.target.value; changed(); o.onInput && o.onInput(); } });
+  input.value = obj[key] ?? '';
+  return h('div', { class: 'field' + (o.wide ? ' wide' : '') },
+    h('label', { class: 'lab', for: id, text: label }), input,
+    o.hint ? h('small', { class: 'hint', text: o.hint }) : null);
+}
+function checkField(label, obj, key, o = {}) {
+  const input = h('input', { type: 'checkbox', checked: !!obj[key], onchange: e => { obj[key] = e.target.checked; changed(); o.onChange && o.onChange(); } });
+  return h('label', { class: 'check' + (o.wide ? ' field wide' : '') }, input, h('span', {}, label, o.hint ? h('small', { text: o.hint }) : null));
+}
+function selectField(label, obj, key, options, o = {}) {
+  const id = 'f' + (++uid);
+  const sel = h('select', { id, class: 'inp', onchange: e => { obj[key] = e.target.value; changed(); o.onChange && o.onChange(); } },
+    options.map(([v, t]) => h('option', { value: v, text: t })));
+  sel.value = obj[key];
+  return h('div', { class: 'field' + (o.wide ? ' wide' : '') }, h('label', { class: 'lab', for: id, text: label }), sel);
+}
+function hotkeyField(label, obj, key, o = {}) {
+  let listening = false, lastSet = 0;
+  const raw = h('input', { class: 'inp ltr mono', dir: 'ltr', 'aria-label': label + ' بصيغة AutoHotkey', title: 'صيغة AutoHotkey — يمكنك تعديلها يدوياً',
+    oninput: e => { obj[key] = e.target.value.trim(); paint(); changed(); } });
+  raw.value = obj[key] || '';
+  const cap = h('button', { type: 'button', class: 'keycap', 'aria-label': label + ': اضغط ثم اضغط الاختصار المطلوب',
+    onclick: () => { if (Date.now() - lastSet < 400) return; listening = true; paint(); } });
+  function paint() {
+    cap.classList.toggle('listening', listening);
+    cap.replaceChildren(...(listening ? [h('span', { class: 'cap-listen', text: 'اضغط الاختصار الآن… (Esc للإلغاء)' })] : renderCaps(obj[key])));
+  }
+  cap.addEventListener('keydown', e => {
+    if (!listening) return;
+    e.preventDefault(); e.stopPropagation();
+    const noMods = !(e.ctrlKey || e.altKey || e.shiftKey || e.metaKey);
+    if (e.code === 'Escape' && noMods) { listening = false; paint(); return; }
+    const k = codeToAhk(e.code); if (!k) return;
+    let m = ''; if (e.ctrlKey) m += '^'; if (e.altKey) m += '!'; if (e.shiftKey) m += '+'; if (e.metaKey) m += '#';
+    obj[key] = m + k; raw.value = obj[key]; listening = false; lastSet = Date.now(); paint(); changed();
+  });
+  cap.addEventListener('blur', () => { if (listening) { listening = false; paint(); } });
+  paint();
+  return h('div', { class: 'field' + (o.wide ? ' wide' : '') }, h('span', { class: 'lab', text: label }), h('div', { class: 'hk' }, cap, raw),
+    o.hint ? h('small', { class: 'hint', text: o.hint }) : null);
+}
+function iconBtn(sym, label, fn, disabled, cls = '') {
+  return h('button', { type: 'button', class: 'ib ' + cls, 'aria-label': label, title: label, disabled: !!disabled, onclick: fn }, sym);
+}
+function moveIn(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+
+function listEditor(arr, fields, makeNew, addText, o = {}) {
+  const wrap = h('div', { class: 'list' });
+  function draw(focusLast) {
+    wrap.replaceChildren();
+    if (!arr.length) wrap.append(h('p', { class: 'empty', text: o.emptyText || 'ما فيه عناصر بعد.' }));
+    arr.forEach((item, i) => {
+      const grid = h('div', { class: 'row-fields' });
+      fields.forEach(f => grid.append(f(item, draw)));
+      wrap.append(h('div', { class: 'row' }, grid, h('div', { class: 'row-ctl' },
+        iconBtn('↑', 'نقل لأعلى', () => { moveIn(arr, i, -1); changed(); draw(); }, i === 0),
+        iconBtn('↓', 'نقل لأسفل', () => { moveIn(arr, i, 1); changed(); draw(); }, i === arr.length - 1),
+        iconBtn('✕', 'حذف', () => { arr.splice(i, 1); changed(); draw(); }, false, 'danger'))));
+    });
+    wrap.append(h('button', { type: 'button', class: 'add', onclick: () => { arr.push(makeNew()); changed(); draw(true); } }, '＋ ' + addText));
+    if (focusLast) { const rows = wrap.querySelectorAll('.row'); const last = rows[rows.length - 1]; last && last.querySelector('input,textarea,button')?.focus(); }
+    renderNav();
+  }
+  draw();
+  return wrap;
+}
+const triggerField = (item, draw) => item.kind === 'hotstring'
+  ? textField('النص الذي تكتبه', item, 'trigger', { ltr: true, placeholder: 'مثال: work///', hint: 'بدون مسافات أو نقطتين (:)' })
+  : hotkeyField('الاختصار', item, 'trigger');
+const kindField = (item, draw) => selectField('طريقة التشغيل', item, 'kind', [['hotkey', 'اختصار من لوحة المفاتيح'], ['hotstring', 'نص تكتبه في أي مكان']], { onChange: draw });
+
+/* ============================================================
+   الأقسام
+   ============================================================ */
+const SECTIONS = [
+  { id: 'general', name: 'عام', count: () => null },
+  { id: 'scripts', name: 'السكربتات', count: () => S.scripts.length },
+  { id: 'menus', name: 'القوائم', count: () => S.submenus.length },
+  { id: 'keys', name: 'الاختصارات', count: () => S.groups.length + S.snippets.length + (S.media.enabled ? 1 : 0) },
+  { id: 'overlay', name: 'الشريط العائم', count: () => S.overlay.enabled ? 'يعمل' : 'مطفأ' },
+  { id: 'custom', name: 'كود إضافي', count: () => S.custom.trim() ? S.custom.trim().split('\n').length : null },
+];
+let current = 'general';
+function renderNav() {
+  const nav = $('#nav'); nav.replaceChildren();
+  SECTIONS.forEach(sec => {
+    const c = sec.count();
+    nav.append(h('button', { type: 'button', 'aria-current': String(sec.id === current), onclick: () => { current = sec.id; renderNav(); renderEditor(); } },
+      h('span', { text: sec.name }), c == null ? null : h('span', { class: 'count', text: String(c) })));
+  });
+}
+function renderEditor() {
+  const ed = $('#editor'); ed.replaceChildren();
+  const rb = reportBox(); if (rb) ed.append(rb);
+  ({ general: secGeneral, scripts: secScripts, menus: secMenus, keys: secKeys, overlay: secOverlay, custom: secCustom })[current](ed);
+}
+
+function secGeneral(ed) {
+  ed.append(h('h2', { text: 'الإعدادات العامة' }),
+    h('p', { class: 'lead', text: 'اسم المنظّم، الاختصار الذي يفتح القائمة، والمتصفح الذي تُفتح فيه الروابط.' }),
+    h('div', { class: 'fields' },
+      textField('اسم المنظّم', S, 'title', { placeholder: 'منظّمي' }),
+      textField('اسم صاحب النسخة (اختياري)', S, 'author', { placeholder: 'يظهر في أعلى الملف' }),
+      hotkeyField('اختصار فتح القائمة', S, 'menuKey', { wide: true, onInput: renderHero }),
+      checkField('يفتح القائمة حتى لو كان Ctrl أو Shift أو Alt مضغوط', S, 'menuWildcard', { wide: true }),
+      textField('مسار المتصفح', S, 'browserPath', { ltr: true, wide: true, placeholder: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        hint: 'اتركه فارغاً لتُفتح الروابط في المتصفح الافتراضي. لو المسار غير موجود في الجهاز، يرجع للمتصفح الافتراضي تلقائياً.' }),
+      checkField('رسالة ترحيب عند تشغيل المنظّم', S.startup, 'enabled', { wide: true, hint: 'تظهر في وسط الشاشة 5 ثوانٍ مع تذكير باختصار القائمة.' }),
+      textField('نص رسالة الترحيب', S.startup, 'text', { wide: true }),
+      checkField('إشعار صغير عند تشغيل أو إيقاف أي شيء', S, 'notify', { wide: true }),
+      checkField('أيقونة المنظّم في شريط المهام تفتح القائمة', S, 'tray', { wide: true, hint: 'دبل كلك على أيقونة AutoHotkey جنب الساعة يفتح قائمتك.' }),
+    ),
+    pathTip());
+}
+function pathTip() {
+  return h('div', { class: 'tip' },
+    'تقدر تكتب المسارات بمتغيرات تتغير حسب جهاز كل شخص، مثل ', h('code', { text: '%A_Desktop%' }), ' لسطح المكتب، ',
+    h('code', { text: '%A_MyDocuments%' }), ' للمستندات، ', h('code', { text: '%A_AppData%' }), '، ', h('code', { text: '%USERPROFILE%' }),
+    '. مثال: ', h('code', { text: '%A_Desktop%\\scripts\\english.ahk' }));
+}
+
+function secScripts(ed) {
+  ed.append(h('h2', { text: 'السكربتات الفرعية' }),
+    h('p', { class: 'lead', text: 'سكربتات AutoHotkey ثانية تشغّلها وتوقفها من القائمة بضغطة. السكربت الشغّال تظهر جنبه علامة ✓.' }),
+    listEditor(S.scripts, [
+      it => textField('الاسم في القائمة', it, 'label', { placeholder: 'سكربت الألعاب' }),
+      it => textField('ملاحظة جانبية (اختياري)', it, 'suffix', { ltr: true, placeholder: 'Ctrl+1', hint: 'تظهر بعد الاسم، مفيدة لتذكّر اختصار السكربت.' }),
+      it => textField('مسار ملف السكربت', it, 'path', { ltr: true, wide: true, placeholder: '%A_Desktop%\\scripts\\english.ahk' }),
+    ], () => ({ label: '', suffix: '', path: '' }), 'إضافة سكربت', { emptyText: 'ما أضفت سكربتات. هذا القسم اختياري.' }),
+    pathTip());
+}
+
+function secMenus(ed) {
+  ed.append(h('h2', { text: 'القوائم الفرعية' }),
+    h('p', { class: 'lead', text: 'كل قائمة فرعية تظهر داخل القائمة الرئيسية. العنصر ممكن يكون رابط موقع، أو برنامج (notepad.exe)، أو مسار ملف أو اختصار ‎.lnk.' }));
+  const holder = h('div');
+  function draw() {
+    holder.replaceChildren();
+    S.submenus.forEach((m, i) => {
+      const head = h('div', { class: 'group-head' },
+        textField('عنوان القائمة', m, 'title', { placeholder: '🌐 مواقعي' }),
+        h('div', { class: 'ctl' },
+          iconBtn('↑', 'نقل القائمة لأعلى', () => { moveIn(S.submenus, i, -1); changed(); draw(); }, i === 0),
+          iconBtn('↓', 'نقل القائمة لأسفل', () => { moveIn(S.submenus, i, 1); changed(); draw(); }, i === S.submenus.length - 1),
+          iconBtn('✕', 'حذف القائمة كاملة', () => { S.submenus.splice(i, 1); changed(); draw(); renderNav(); }, false, 'danger')));
+      holder.append(h('div', { class: 'group' }, head,
+        listEditor(m.items, [
+          it => textField('الاسم', it, 'label', { placeholder: '📌 Todoist', hint: 'اكتب - فقط لإضافة خط فاصل' }),
+          it => textField('الرابط أو المسار', it, 'target', { ltr: true, placeholder: 'https://… أو notepad.exe' }),
+        ], () => ({ label: '', target: '' }), 'إضافة عنصر', { emptyText: 'القائمة فاضية، أضف أول عنصر.' })));
+    });
+    holder.append(h('button', { type: 'button', class: 'add', onclick: () => { S.submenus.push({ title: '', items: [{ label: '', target: '' }] }); changed(); draw(); renderNav(); holder.querySelector('.group:last-of-type input')?.focus(); } }, '＋ إضافة قائمة فرعية'));
+  }
+  draw();
+  ed.append(holder,
+    h('h3', { text: 'عناصر ثابتة أسفل القائمة' }),
+    h('div', { class: 'fieldgrid' },
+      checkField('🔄 إعادة تحميل المنظّم', S.extras, 'reload'),
+      checkField('✏️ تعديل السكربت', S.extras, 'edit'),
+      checkField('⏻ إيقاف المنظّم', S.extras, 'exit'),
+      checkField('❌ إغلاق القائمة', S.extras, 'close'),
+      checkField('🚀 التشغيل مع ويندوز', S.extras, 'startup')),
+    pathTip());
+}
+
+function secKeys(ed) {
+  ed.append(h('h2', { text: 'الاختصارات' }),
+    h('p', { class: 'lead', text: 'اضغط على شكل المفتاح ثم اضغط الاختصار الذي تبيه، وبيتسجّل تلقائياً.' }),
+    h('h3', { text: 'التحكم بالموسيقى' }),
+    h('p', { class: 'sublead', text: 'التالي والسابق والإيقاف المؤقت لأي مشغّل (سبوتيفاي، يوتيوب، ساوند كلاود…).' }),
+    checkField('تفعيل اختصارات الموسيقى', S.media, 'enabled'),
+    h('div', { class: 'fields', style: 'margin-top:10px' },
+      hotkeyField('⏭️ التالي', S.media, 'next'), hotkeyField('⏮️ السابق', S.media, 'prev'), hotkeyField('⏯️ تشغيل / إيقاف', S.media, 'play')),
+
+    h('h3', { text: 'فتح مجموعة روابط أو برامج دفعة وحدة' }),
+    h('p', { class: 'sublead', text: 'مثلاً تكتب work/// فتنفتح كل مواقع الشغل في نافذة جديدة.' }),
+    listEditor(S.groups, [
+      kindField, triggerField,
+      it => textField('الروابط أو البرامج (كل واحد في سطر)', it, 'targets', { ltr: true, multiline: true, rows: 5, wide: true }),
+      it => checkField('افتح الروابط في نافذة متصفح جديدة', it, 'newWindow', { wide: true }),
+    ], () => ({ kind: 'hotstring', trigger: '', newWindow: true, targets: '' }), 'إضافة مجموعة'),
+
+    h('h3', { text: 'لصق نص جاهز' }),
+    h('p', { class: 'sublead', text: 'نصوص تستخدمها كثير (برومبت، رد جاهز، توقيع) تنلصق بضغطة.' }),
+    listEditor(S.snippets, [
+      kindField, triggerField,
+      it => textField('النص', it, 'text', { multiline: true, rows: 4, wide: true }),
+      it => textField('مفاتيح قبل اللصق (اختياري، للمتقدمين)', it, 'pre', { ltr: true, placeholder: '+{Enter 2}', hint: 'بصيغة Send في AutoHotkey. مثال: ‎+{Enter 2}‎ ينزل سطرين قبل اللصق.' }),
+    ], () => ({ kind: 'hotkey', trigger: '', instant: true, pre: '', text: '' }), 'إضافة نص'));
+}
+
+function secOverlay(ed) {
+  const o = S.overlay;
+  const opacityOut = h('output', { text: String(o.opacity) });
+  const range = h('input', { type: 'range', min: 60, max: 255, 'aria-label': 'درجة الوضوح', oninput: e => { o.opacity = Number(e.target.value); opacityOut.textContent = o.opacity; changed(); } });
+  range.value = o.opacity;
+  const color = h('input', { type: 'color', class: 'inp', style: 'height:40px;padding:3px', 'aria-label': 'لون النص', oninput: e => { o.color = e.target.value; changed(); } });
+  color.value = o.color;
+
+  // ترتيب المعلومات
+  const orderList = h('div', { class: 'ovorder' });
+  function drawOrder() {
+    orderList.replaceChildren();
+    o.order.forEach((k, i) => {
+      const cb = h('input', { type: 'checkbox', checked: !!o.fields[k], id: 'ovf-' + k, onchange: e => { o.fields[k] = e.target.checked; changed(); } });
+      orderList.append(h('div', { class: 'ovrow' + (o.fields[k] ? '' : ' off') },
+        cb, h('label', { for: 'ovf-' + k, class: 'ovname' }, OV[k].ar, h('span', { class: 'ven', text: OV[k].en })),
+        iconBtn('↑', 'نقل لأعلى', () => { moveIn(o.order, i, -1); changed(); drawOrder(); }, i === 0),
+        iconBtn('↓', 'نقل لأسفل', () => { moveIn(o.order, i, 1); changed(); drawOrder(); }, i === o.order.length - 1)));
+      cb.addEventListener('change', drawOrder);
+    });
+  }
+  drawOrder();
+
+  // شاشة السحب
+  const block = h('div', { class: 'ov-block', tabindex: '0', role: 'slider', 'aria-label': 'مكان الشريط: اسحبه أو استخدم الأسهم' });
+  const screen = h('div', { class: 'screen' }, h('div', { class: 'task' }), block);
+  let drag = null;
+  block.addEventListener('pointerdown', e => {
+    const r = block.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+    block.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  block.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const g = ovGeom(screen); const sr = screen.getBoundingClientRect();
+    const left = e.clientX - sr.left - screen.clientLeft - drag.dx;
+    const top = e.clientY - sr.top - screen.clientTop - drag.dy;
+    o.px = g.freeW > 0 ? Math.min(1, Math.max(0, (left - g.m) / g.freeW)) : 0;
+    o.py = g.freeH > 0 ? Math.min(1, Math.max(0, (top - g.m) / g.freeH)) : 0;
+    placeBlock(screen, block); changed();
+  });
+  const end = () => { drag = null; };
+  block.addEventListener('pointerup', end); block.addEventListener('pointercancel', end);
+  block.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 0.1 : 0.02; let used = true;
+    if (e.key === 'ArrowLeft') o.px -= step; else if (e.key === 'ArrowRight') o.px += step;
+    else if (e.key === 'ArrowUp') o.py -= step; else if (e.key === 'ArrowDown') o.py += step; else used = false;
+    if (!used) return;
+    e.preventDefault(); o.px = Math.min(1, Math.max(0, o.px)); o.py = Math.min(1, Math.max(0, o.py));
+    placeBlock(screen, block); changed();
+  });
+  const corner = (x, y, label) => h('button', { type: 'button', class: 'btn', onclick: () => { o.px = x; o.py = y; placeBlock(screen, block); changed(); } }, label);
+
+  ed.append(h('h2', { text: 'الشريط العائم' }),
+    h('p', { class: 'lead', text: 'شريط شفاف يعرض معلومات جهازك بالإنجليزي، كل معلومة في سطر ومرتبة تحت بعض. الماوس يمر من خلاله فما يعطّلك.' }),
+    checkField('تفعيل الشريط العائم', o, 'enabled', { onChange: renderNav }),
+
+    h('h3', { text: 'شكله على الشاشة' }),
+    h('div', { class: 'ovprev-wrap' }, h('pre', { class: 'ovprev', id: 'ovPrev', dir: 'ltr' })),
+
+    h('h3', { text: 'المكان' }),
+    h('p', { class: 'sublead', text: 'اسحب المستطيل لأي مكان في الشاشة، أو اختر زاوية جاهزة.' }),
+    screen,
+    h('div', { class: 'corners' },
+      corner(0, 0, '↖ أعلى اليسار'), corner(1, 0, '↗ أعلى اليمين'), corner(0, 1, '↙ أسفل اليسار'), corner(1, 1, '↘ أسفل اليمين')),
+
+    h('h3', { text: 'المعلومات وترتيبها' }),
+    h('p', { class: 'sublead', text: 'فعّل اللي تبيه ورتّبه بالأسهم. نفس الترتيب يظهر في الشريط.' }),
+    orderList,
+
+    h('h3', { text: 'الشكل' }),
+    h('div', { class: 'fields' },
+      selectField('الخط', o, 'font', [['Consolas', 'Consolas (مرتب ومتساوي)'], ['Cascadia Mono', 'Cascadia Mono'], ['Segoe UI', 'Segoe UI']]),
+      textField('حجم الخط', o, 'fontSize', { type: 'number', min: 7, max: 20 }),
+      textField('العرض بالبكسل', o, 'width', { type: 'number', min: 200, max: 900 }),
+      h('div', { class: 'field' }, h('span', { class: 'lab', text: 'لون النص' }), color),
+      h('div', { class: 'field' }, h('span', { class: 'lab', text: 'درجة الوضوح' }), h('div', { class: 'range-row' }, range, opacityOut)),
+      selectField('صيغة الوقت', o, 'time24', [['true', '24 ساعة (14:05)'], ['false', '12 ساعة (2:05 PM)']]),
+      selectField('التحديث كل', o, 'interval', [['1000', 'ثانية'], ['2000', 'ثانيتين'], ['5000', '5 ثواني']]),
+      textField('أقصى طول لنص الحافظة', o, 'clipMax', { type: 'number', min: 10, max: 200 }),
+      hotkeyField('إظهار / إخفاء', o, 'toggleKey', { wide: true }),
+      checkField('إظهار أيقونات بجانب كل سطر', o, 'icons', { wide: true, hint: 'بدونها يكون الشريط أنظف والأعمدة متساوية تماماً.' })));
+
+  requestAnimationFrame(() => { placeBlock(screen, block); renderOvPreview(); });
+  if (window.ResizeObserver) new ResizeObserver(() => placeBlock(screen, block)).observe(screen);
+  secOverlay.place = () => placeBlock(screen, block);
+}
+
+function ovLabels() {
+  const o = S.overlay; const keys = o.order.filter(k => o.fields[k]);
+  const w = Math.max(0, ...keys.map(k => OV[k].en.length));
+  return keys.map(k => [k, (o.icons ? OV[k].icon + ' ' : '') + OV[k].en.padEnd(w) + ' : ']);
+}
+function ovSample(k) { return k === 'time' && String(S.overlay.time24) === 'false' ? '2:05:33 PM' : OV[k].sample; }
+function renderOvPreview() {
+  const el = document.getElementById('ovPrev'); if (!el) return;
+  const o = S.overlay; const lines = ovLabels();
+  el.textContent = lines.length ? lines.map(([k, lab]) => lab + ovSample(k)).join('\n') : '(ما اخترت أي معلومة)';
+  const hex = (o.color || '#ffffff');
+  el.style.color = hex; el.style.opacity = String(Math.max(0.25, (Number(o.opacity) || 200) / 255));
+  el.style.fontFamily = '"' + o.font + '", ' + (o.font === 'Segoe UI' ? 'var(--ui)' : 'var(--mono)');
+  el.style.fontSize = (clampN(o.fontSize, 7, 20, 10) * 1.333) + 'px';
+}
+function ovGeom(screen) {
+  const W = screen.clientWidth, H = screen.clientHeight, s = W / 1920;
+  const workH = H - H * 0.044;
+  const o = S.overlay; const n = Math.max(1, ovLabels().length);
+  const bw = (clampN(o.width, 200, 900, 400) + 20) * s;
+  const bh = (n * clampN(o.fontSize, 7, 20, 10) * 1.333 * 1.3 + 16) * s;
+  const m = 15 * s;
+  return { bw, bh, m, freeW: W - bw - 2 * m, freeH: workH - bh - 2 * m };
+}
+function placeBlock(screen, block) {
+  const g = ovGeom(screen); const o = S.overlay;
+  block.style.width = g.bw + 'px'; block.style.height = g.bh + 'px';
+  block.style.left = (g.m + Math.max(0, g.freeW) * o.px) + 'px';
+  block.style.top = (g.m + Math.max(0, g.freeH) * o.py) + 'px';
+  block.setAttribute('aria-valuetext', Math.round(o.px * 100) + '% من اليسار، ' + Math.round(o.py * 100) + '% من الأعلى');
+}
+
+/* ============================================================
+   مولّد الكود
+   ============================================================ */
+function q(s) {
+  return '"' + String(s ?? '').replace(/`/g, '``').replace(/"/g, '`"').replace(/\r?\n/g, '`n').replace(/\t/g, '`t') + '"';
+}
+const A_VARS = ['A_Desktop', 'A_DesktopCommon', 'A_MyDocuments', 'A_AppData', 'A_AppDataCommon', 'A_ProgramFiles', 'A_StartMenu', 'A_Startup', 'A_ScriptDir', 'A_UserName', 'A_WinDir', 'A_Temp', 'A_ComputerName', 'A_ProgramsCommon', 'A_Programs'];
+const ENV_VARS = ['USERPROFILE', 'LOCALAPPDATA', 'APPDATA', 'ONEDRIVE', 'PROGRAMFILES', 'WINDIR', 'TEMP'];
+function normTarget(p) { p = String(p ?? '').trim(); if (/^www\./i.test(p)) p = 'https://' + p; return p; }
+function pexpr(p) {
+  p = normTarget(p);
+  const ex = []; let lit = ''; let last = 0;
+  const re = /%([A-Za-z_]+)%/g; let m;
+  while ((m = re.exec(p))) {
+    const name = m[1];
+    const isA = A_VARS.find(v => v.toLowerCase() === name.toLowerCase());
+    const isE = ENV_VARS.includes(name.toUpperCase());
+    if (!isA && !isE) continue;
+    lit += p.slice(last, m.index);
+    if (lit) ex.push(q(lit)); lit = '';
+    ex.push(isA ? isA : 'EnvGet(' + q(name.toUpperCase()) + ')');
+    last = m.index + m[0].length;
+  }
+  lit += p.slice(last);
+  if (lit) ex.push(q(lit));
+  return ex.length ? ex.join(' ') : '""';
+}
+function hsTrigger(t) { return String(t || '').trim().replace(/`/g, '``'); }
+function box(text) {
+  const lines = String(text || '').split('\n');
+  return '┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n' + lines.map(l => '   ' + l).join('\n') + '\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛';
+}
+const validScripts = () => S.scripts.filter(x => one(x.label) && String(x.path || '').trim());
+const scriptMenuName = x => one(x.label) + (String(x.suffix || '').trim() ? ' \u200E' + String(x.suffix).trim() : '');
+const validItems = m => m.items.filter(it => one(it.label) === '-' || (one(it.label) && String(it.target || '').trim()));
+const validSubmenus = () => S.submenus.filter(m => one(m.title) && validItems(m).some(it => one(it.label) !== '-'));
+const splitTargets = t => String(t || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+const STARTUP_LABEL = '🚀 التشغيل مع ويندوز';
+const EXTRAS = [['startup', STARTUP_LABEL, null], ['reload', '🔄 إعادة تحميل المنظّم', 'Reload()'], ['edit', '✏️ تعديل السكربت', 'Edit()'], ['exit', '⏻ إيقاف المنظّم', 'ExitApp()'], ['close', '❌ إغلاق القائمة', '""']];
+const hkLine = t => String(t || '').trim();
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+function gen() {
+  const L = []; const w = (...a) => L.push(...a);
+  const sec = t => w('', '; ============================================================', '; ' + t, '; ============================================================');
+  const title = one(S.title) || 'منظّمي';
+  const scripts = validScripts();
+  const subs = validSubmenus();
+  const extras = EXTRAS.filter(([k]) => S.extras[k]);
+  const groups = S.groups.filter(g => hkLine(g.trigger) && splitTargets(g.targets).length);
+  const snippets = S.snippets.filter(s => hkLine(s.trigger) && String(s.text || '').length);
+  const media = S.media.enabled;
+  const O = S.overlay; const F = O.fields;
+  const overlay = O.enabled && Object.values(F).some(Boolean);
+  const menuKey = hkLine(S.menuKey) || 'F9';
+
+  w('#Requires AutoHotkey v2.0', '#SingleInstance Force', '',
+    '; ' + title + (one(S.author) ? '  |  ' + one(S.author) : ''),
+    '; تم إنشاؤه بواسطة ' + BRAND.name + ' ' + BRAND.version + ' بتاريخ ' + today());
+
+  sec('الإعدادات');
+  w('global BrowserPath := ' + pexpr(S.browserPath), '',
+    'DetectHiddenWindows True', 'SetTitleMatchMode 2', 'CoordMode "ToolTip", "Screen"', '',
+    'global MidX := A_ScreenWidth // 2', 'global MidY := A_ScreenHeight // 2');
+  if (S.startup.enabled) {
+    const msg = box((one(S.startup.text) || 'تم التشغيل ✅') + '\n      ' + prettyHotkey(menuKey) + ' للقائمة');
+    w('', 'ToolTip(' + q(msg) + ', MidX - 160, MidY - 40)', 'SetTimer(ClearTip, -5000)');
+  }
+
+  sec('السكربتات الفرعية');
+  if (scripts.length) {
+    w('global Scripts := [');
+    scripts.forEach((x, i) => {
+      const sfx = String(x.suffix || '').trim();
+      const name = sfx ? q(one(x.label) + ' ') + ' . Chr(0x200E) . ' + q(sfx) : q(one(x.label));
+      w('    {Name: ' + name + ', Path: ' + pexpr(x.path) + ', Nice: ' + q(one(x.label)) + '}' + (i < scripts.length - 1 ? ',' : ''));
+    });
+    w(']');
+  } else w('global Scripts := []');
+
+  sec('بناء القائمة');
+  w('ScriptMenu := Menu()', 'for s in Scripts', '    ScriptMenu.Add(s.Name, ToggleScript.Bind(s))');
+  let hasItems = scripts.length > 0;
+  subs.forEach((m, i) => {
+    const v = 'SubMenu' + (i + 1);
+    w('', '; ' + one(m.title), v + ' := Menu()');
+    validItems(m).forEach(it => {
+      const lab = one(it.label);
+      if (lab === '-') w(v + '.Add()');
+      else w(v + '.Add(' + q(lab) + ', (*) => OpenTarget(' + pexpr(it.target) + ', ' + q(lab) + '))');
+    });
+    if (i === 0 && hasItems) w('ScriptMenu.Add()');
+    w('ScriptMenu.Add(' + q(one(m.title)) + ', ' + v + ')');
+    hasItems = true;
+  });
+  if (extras.length) {
+    w('');
+    if (hasItems) w('ScriptMenu.Add()');
+    extras.forEach(([k, lab, act]) => w('ScriptMenu.Add(' + q(lab) + ', ' + (k === 'startup' ? 'ToggleStartup' : '(*) => ' + act) + ')'));
+  }
+  if (S.tray) w('', '; أيقونة شريط المهام', 'A_IconTip := ' + q(title), 'A_TrayMenu.Add()', 'A_TrayMenu.Add("📋 فتح القائمة", ShowMainMenu)', 'A_TrayMenu.Default := "📋 فتح القائمة"');
+
+  if (overlay) {
+    sec('الشريط العائم');
+    const color = (O.color || '#FFFFFF').replace('#', '').toUpperCase();
+    const safeColor = color === '000000' ? '010101' : color;
+    const nLines = ovLabels().length;
+    w('global StartTick := A_TickCount', 'global OverlayVisible := true', '',
+      'global InfoGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")',
+      'InfoGui.BackColor := "000000"',
+      'InfoGui.MarginX := 10, InfoGui.MarginY := 8',
+      'InfoGui.SetFont("s' + clampN(O.fontSize, 7, 20, 10) + ' c' + safeColor + '", ' + q(O.font || 'Consolas') + ')',
+      'global InfoText := InfoGui.AddText("w' + clampN(O.width, 200, 900, 400) + ' r' + nLines + ' Left", "Loading...")',
+      'WinSetTransColor("000000 ' + clampN(O.opacity, 60, 255, 210) + '", InfoGui)', '',
+      '; المكان: نسبة من المساحة الفاضية (0 = يسار/أعلى، 1 = يمين/أسفل)',
+      'global OverlayPosX := ' + (+O.px).toFixed(3), 'global OverlayPosY := ' + (+O.py).toFixed(3), '',
+      'UpdateStatusOverlay()',
+      'InfoGui.Show("Hide")',
+      'InfoGui.GetPos(, , &gw, &gh)',
+      'MonitorGetWorkArea(, &wl, &wt, &wr, &wb)',
+      'gx := wl + 15 + Round(Max(0, wr - wl - gw - 30) * OverlayPosX)',
+      'gy := wt + 15 + Round(Max(0, wb - wt - gh - 30) * OverlayPosY)',
+      'InfoGui.Show("x" gx " y" gy " NoActivate")',
+      'SetTimer(UpdateStatusOverlay, ' + (Number(O.interval) || 1000) + ')');
+  }
+  w('', 'Persistent');
+
+  // ---------- Hotkeys ----------
+  sec('اختصار القائمة');
+  w((S.menuWildcard ? '*' : '') + menuKey + '::ShowMainMenu()');
+
+  if (media) {
+    sec('التحكم بالموسيقى');
+    [['next', '{Media_Next}', '⏭️ Next'], ['prev', '{Media_Prev}', '⏮️ Previous'], ['play', '{Media_Play_Pause}', '⏯️ Play / Pause']].forEach(([k, key, tip]) => {
+      if (!hkLine(S.media[k])) return;
+      w('', hkLine(S.media[k]) + ':: {', '    Send("' + key + '")', '    ShowTip(' + q(tip) + ')', '}');
+    });
+  }
+  if (overlay && hkLine(O.toggleKey)) {
+    sec('إظهار / إخفاء الشريط العائم');
+    w(hkLine(O.toggleKey) + ':: {', '    global OverlayVisible', '    OverlayVisible := !OverlayVisible', '    if OverlayVisible {',
+      '        InfoGui.Show("NoActivate")', '        UpdateStatusOverlay()', '    } else', '        InfoGui.Hide()', '}');
+  }
+  if (groups.length) {
+    sec('فتح مجموعات الروابط والبرامج');
+    groups.forEach(g => {
+      const trig = g.kind === 'hotstring' ? ':*:' + hsTrigger(g.trigger) + '::' : hkLine(g.trigger) + '::';
+      const items = splitTargets(g.targets);
+      w('', trig, '{', '    OpenGroup([');
+      items.forEach((t, i) => w('        ' + pexpr(t) + (i < items.length - 1 ? ',' : '')));
+      w('    ], ' + (g.newWindow ? 'true' : 'false') + ')', '}');
+    });
+  }
+  if (snippets.length) {
+    sec('النصوص الجاهزة');
+    snippets.forEach(s => {
+      const trig = s.kind === 'hotstring' ? ':*:' + hsTrigger(s.trigger) + '::' : hkLine(s.trigger) + '::';
+      w('', trig, '{', '    PasteText(' + q(s.text) + ', ' + q(String(s.pre || '').trim()) + ')', '}');
+    });
+  }
+
+  // ---------- Functions ----------
+  sec('الوظائف');
+  w('ShowMainMenu(*) {',
+    '    for s in Scripts {',
+    '        if WinExist(s.Path " - AutoHotkey")',
+    '            ScriptMenu.Check(s.Name)',
+    '        else',
+    '            ScriptMenu.Uncheck(s.Name)',
+    '    }');
+  if (S.extras.startup) w('    if FileExist(StartupLnk())', '        ScriptMenu.Check(' + q(STARTUP_LABEL) + ')', '    else', '        ScriptMenu.Uncheck(' + q(STARTUP_LABEL) + ')');
+  w('    ScriptMenu.Show()', '}', '');
+  if (S.extras.startup) w('StartupLnk() => A_Startup "\\" RegExReplace(A_ScriptName, "i)\\.ahk$") ".lnk"', '',
+    'ToggleStartup(*) {',
+    '    lnk := StartupLnk()',
+    '    if FileExist(lnk) {',
+    '        FileDelete(lnk)',
+    '        Notify("ما راح يشتغل مع ويندوز")',
+    '    } else {',
+    '        FileCreateShortcut(A_ScriptFullPath, lnk, A_ScriptDir)',
+    '        Notify("راح يشتغل مع ويندوز 🚀")',
+    '    }',
+    '}', '');
+  w('ClearTip() {', '    ToolTip()', '}', '',
+    'Notify(msg) {');
+  if (S.notify) w('    ToolTip("┏━━━━━━━━━━━━━┓`n   " msg "`n┗━━━━━━━━━━━━━┛", MidX - 70, MidY + 150)', '    SetTimer(ClearTip, -2500)');
+  else w('    return');
+  w('}');
+  if (media) w('', 'ShowTip(text) {', '    ToolTip(text)', '    SetTimer(ClearTip, -1700)', '}');
+
+  w('', 'IsUrl(target) {', '    return RegExMatch(target, "i)^https?://")', '}', '',
+    'OpenTarget(Target, Name) {',
+    '    try {',
+    '        if IsUrl(Target) {',
+    '            if (BrowserPath != "" && FileExist(BrowserPath))',
+    '                Run(\'"\' BrowserPath \'" "\' Target \'"\')',
+    '            else',
+    '                Run(Target)',
+    '            Notify("تم فتح: " Name " 🌐")',
+    '        } else {',
+    '            Run(Target)',
+    '            Notify("تم تشغيل: " Name " 💻")',
+    '        }',
+    '    } catch {',
+    '        MsgBox("تعذّر فتح:`n" Target, "تنبيه", "Icon!")',
+    '    }',
+    '}', '',
+    'ToggleScript(s, *) {',
+    '    if !FileExist(s.Path) {',
+    '        MsgBox("الملف غير موجود في المسار:`n" s.Path, "تنبيه", "Icon!")',
+    '        return',
+    '    }',
+    '    if WinExist(s.Path " - AutoHotkey") {',
+    '        WinClose(s.Path " - AutoHotkey")',
+    '        Notify("تم إيقاف " s.Nice " ❌")',
+    '    } else {',
+    '        Run(s.Path)',
+    '        Notify("تم تشغيل " s.Nice " ✅")',
+    '    }',
+    '}');
+
+  if (groups.length) w('',
+    'OpenGroup(items, newWindow := true) {',
+    '    useBrowser := (BrowserPath != "" && FileExist(BrowserPath))',
+    '    first := true',
+    '    for item in items {',
+    '        try {',
+    '            if IsUrl(item) && useBrowser {',
+    '                if (first && newWindow) {',
+    '                    Run(\'"\' BrowserPath \'" --new-window "\' item \'"\')',
+    '                    Sleep(1000)',
+    '                } else {',
+    '                    Run(\'"\' BrowserPath \'" "\' item \'"\')',
+    '                    Sleep(200)',
+    '                }',
+    '                first := false',
+    '            } else {',
+    '                Run(item)',
+    '                Sleep(300)',
+    '            }',
+    '        } catch {',
+    '            MsgBox("تعذّر فتح:`n" item, "تنبيه", "Icon!")',
+    '        }',
+    '    }',
+    '    Notify("تم فتح " items.Length " عناصر 🌐")',
+    '}');
+
+  if (snippets.length) w('',
+    'PasteText(text, preKeys := "") {',
+    '    saved := ClipboardAll()',
+    '    A_Clipboard := text',
+    '    if !ClipWait(1)',
+    '        return',
+    '    if (preKeys != "")',
+    '        Send(preKeys)',
+    '    Sleep(100)',
+    '    Send("^v")',
+    '    SetTimer(() => (A_Clipboard := saved), -1000)',
+    '}');
+
+  if (overlay) genOverlayFunctions(w);
+
+  const custom = String(S.custom || '').replace(/\s+$/, '');
+  if (custom) {
+    sec('كود إضافي');
+    const uses = n => new RegExp('\\b' + n + '\\(').test(custom) && !new RegExp('^' + n + '\\(', 'm').test(custom);
+    const compat = [];
+    if (uses('NotifyGUI')) compat.push('NotifyGUI(msg) => Notify(msg)');
+    if (uses('OpenURL')) compat.push('OpenURL(URL, Name := "") => OpenTarget(URL, Name != "" ? Name : URL)');
+    if (uses('OpenApp')) compat.push('OpenApp(Path, Name := "") => OpenTarget(Path, Name != "" ? Name : Path)');
+    if (uses('OpenPlaylist')) compat.push('OpenPlaylist(Path, Name := "") => OpenTarget(Path, Name != "" ? Name : Path)');
+    if (uses('HandleScript')) compat.push('HandleScript(Path, Nice, *) => ToggleScript({Path: Path, Nice: Nice})');
+    if (/\bChromePath\b/.test(custom) && !/^\s*(global\s+)?ChromePath\s*:=/m.test(custom)) compat.push('global ChromePath := BrowserPath');
+    if (compat.length) w('; توافق مع الأسماء القديمة', ...compat, '');
+    w(custom);
+  }
+  w('', '; ============================================================',
+    '; السطر التالي يحفظ إعدادات ' + BRAND.name + ' داخل الملف — افتح هذا الملف في الأداة لتعديله.',
+    SETTINGS_TAG + b64encode(JSON.stringify(S)));
+  return L.join('\n') + '\n';
+}
+function clampN(v, a, b, d) { v = Number(v); if (!isFinite(v)) return d; return Math.round(Math.min(b, Math.max(a, v))); }
+
+function genOverlayFunctions(w) {
+  const O = S.overlay; const F = O.fields;
+  const labels = ovLabels();
+  const N = clampN(O.clipMax, 10, 200, 40);
+  const time24 = String(O.time24) !== 'false';
+  const EXPR = {
+    date: 'FormatTime(A_Now " L0x0409", "ddd, d MMM yyyy")',
+    time: time24 ? 'FormatTime(, "HH:mm:ss")' : 'FormatTime(A_Now " L0x0409", "h:mm:ss tt")',
+    hijri: 'GetHijriDate()', uptime: 'Up', battery: 'GetBatteryStatus()', volume: 'GetVolumeStatus()',
+    mic: 'GetMicStatus()', lang: 'GetCurrentKeyboardLanguage()',
+    caps: '(GetKeyState("CapsLock", "T") ? "ON" : "OFF")', num: '(GetKeyState("NumLock", "T") ? "ON" : "OFF")',
+    brightness: 'GetBrightnessLevel()', disk: 'GetDiskFreeSpace()', clipboard: 'Clip',
+  };
+  w('', 'UpdateStatusOverlay() {', '    if !OverlayVisible', '        return');
+  if (F.uptime) w('    Sec := (A_TickCount - StartTick) // 1000',
+    '    Up := Format("{:02d}:{:02d}:{:02d}", Sec // 3600, Mod(Sec, 3600) // 60, Mod(Sec, 60))');
+  if (F.clipboard) w('    Clip := "(empty)"', '    try {', '        if (A_Clipboard != "") {',
+    '            Clip := Trim(RegExReplace(SubStr(A_Clipboard, 1, ' + (N * 3) + '), "\\s+", " "))',
+    '            if (StrLen(Clip) > ' + N + ')', '                Clip := SubStr(Clip, 1, ' + N + ') "..."', '        }', '    }');
+  labels.forEach(([k, lab], i) => {
+    if (i === 0) w('    InfoText.Value := ' + q(lab) + ' ' + EXPR[k]);
+    else w('        . ' + q('\n' + lab) + ' ' + EXPR[k]);
+  });
+  w('}');
+
+  if (F.hijri) w('',
+    '; التاريخ الهجري: يستخدم تقويم أم القرى من ويندوز، وإذا ما توفر يحسبه رياضياً (تقريبي)',
+    'GetHijriDate() {',
+    '    static cache := "", cacheDay := ""',
+    '    static Months := ["Muharram", "Safar", "Rabi I", "Rabi II", "Jumada I", "Jumada II", "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhul Qadah", "Dhul Hijjah"]',
+    '    today := FormatTime(, "yyyyMMdd")',
+    '    if (cacheDay = today && cache != "")',
+    '        return cache',
+    '    cacheDay := today',
+    '    h := ""',
+    '    try h := ToAsciiDigits(FormatTime(A_Now " L0x0401", "yyyy-MM-dd"))',
+    '    if !RegExMatch(h, "^(1[3-5]\\d\\d)-(\\d\\d)-(\\d\\d)$", &m)',
+    '        RegExMatch(HijriTabular(), "^(\\d+)-(\\d+)-(\\d+)$", &m)',
+    '    cache := Integer(m[3]) " " Months[Integer(m[2])] " " m[1]',
+    '    return cache',
+    '}', '',
+    'ToAsciiDigits(str) {',
+    '    out := ""',
+    '    Loop Parse str {',
+    '        c := Ord(A_LoopField)',
+    '        if (c >= 0x660 && c <= 0x669)',
+    '            out .= Chr(c - 0x630)',
+    '        else if (c >= 0x6F0 && c <= 0x6F9)',
+    '            out .= Chr(c - 0x6C0)',
+    '        else if ((c >= 0x30 && c <= 0x39) || A_LoopField = "-")',
+    '            out .= A_LoopField',
+    '    }',
+    '    return out',
+    '}', '',
+    'HijriTabular() {',
+    '    y := Integer(A_YYYY), m := Integer(A_MM), d := Integer(A_DD)',
+    '    a := (14 - m) // 12',
+    '    yy := y + 4800 - a',
+    '    mm := m + 12 * a - 3',
+    '    jd := d + (153 * mm + 2) // 5 + 365 * yy + yy // 4 - yy // 100 + yy // 400 - 32045',
+    '    l := jd - 1948440 + 10632',
+    '    n := (l - 1) // 10631',
+    '    l := l - 10631 * n + 354',
+    '    j := ((10985 - l) // 5316) * ((50 * l) // 17719) + (l // 5670) * ((43 * l) // 15238)',
+    '    l := l - ((30 - j) // 15) * ((17719 * j) // 50) - (j // 16) * ((15238 * j) // 43) + 29',
+    '    im := (24 * l) // 709',
+    '    id := l - (709 * im) // 24',
+    '    iy := 30 * n + j - 30',
+    '    return Format("{:04d}-{:02d}-{:02d}", iy, im, id)',
+    '}');
+
+  if (F.battery) w('',
+    'GetBatteryStatus() {',
+    '    static cache := "No battery", last := 0',
+    '    if (last && A_TickCount - last < 30000)',
+    '        return cache',
+    '    last := A_TickCount',
+    '    try {',
+    '        for b in ComObjGet("winmgmts:").ExecQuery("SELECT EstimatedChargeRemaining, BatteryStatus FROM Win32_Battery") {',
+    '            st := b.BatteryStatus',
+    '            cache := b.EstimatedChargeRemaining "%" ((st = 2 || (st >= 6 && st <= 9)) ? " (plugged in)" : "")',
+    '            break',
+    '        }',
+    '    }',
+    '    return cache',
+    '}');
+  if (F.volume) w('',
+    'GetVolumeStatus() {',
+    '    try {',
+    '        return SoundGetMute() ? "Muted" : Round(SoundGetVolume()) "%"',
+    '    }',
+    '    return "N/A"',
+    '}');
+  if (F.mic) w('',
+    'GetMicStatus() {',
+    '    for dev in ["Microphone", "Capture", 1, 2] {',
+    '        try {',
+    '            return SoundGetMute(, dev) ? "Muted" : "On"',
+    '        }',
+    '    }',
+    '    return "N/A"',
+    '}');
+  if (F.brightness) w('',
+    'GetBrightnessLevel() {',
+    '    static cache := "N/A", last := 0',
+    '    if (last && A_TickCount - last < 5000)',
+    '        return cache',
+    '    last := A_TickCount',
+    '    try {',
+    '        for item in ComObjGet("winmgmts:\\\\.\\root\\WMI").ExecQuery("SELECT CurrentBrightness FROM WmiMonitorBrightness") {',
+    '            cache := item.CurrentBrightness "%"',
+    '            break',
+    '        }',
+    '    }',
+    '    return cache',
+    '}');
+  if (F.disk) w('',
+    'GetDiskFreeSpace() {',
+    '    static cache := "N/A", last := 0',
+    '    if (last && A_TickCount - last < 30000)',
+    '        return cache',
+    '    last := A_TickCount',
+    '    try cache := Round(DriveGetSpaceFree("C:\\") / 1024, 1) " GB free"',
+    '    return cache',
+    '}');
+  if (F.lang) w('',
+    'GetCurrentKeyboardLanguage() {',
+    '    static Names := Map(0x01, "AR", 0x09, "EN", 0x0C, "FR", 0x07, "DE", 0x0A, "ES", 0x10, "IT", 0x19, "RU", 0x1F, "TR", 0x29, "FA", 0x20, "UR", 0x21, "ID", 0x39, "HI")',
+    '    hwnd := DllCall("GetForegroundWindow", "Ptr")',
+    '    if !hwnd',
+    '        return "--"',
+    '    threadID := DllCall("GetWindowThreadProcessId", "Ptr", hwnd, "Ptr", 0, "UInt")',
+    '    langID := DllCall("GetKeyboardLayout", "UInt", threadID, "Ptr") & 0xFFFF',
+    '    primary := langID & 0x3FF',
+    '    return Names.Has(primary) ? Names[primary] : Format("0x{:04X}", langID)',
+    '}');
+}
+
+/* ============================================================
+   التحقق من الأخطاء
+   ============================================================ */
+function normHk(hk) {
+  const p = parseHotkey(hk); if (!p || !p.key) return '';
+  return p.mods.split('').sort().join('') + p.key.toLowerCase();
+}
+function validate() {
+  const W = [];
+  const hks = []; const hss = [];
+  const addHk = (k, where) => { const n = normHk(k); if (n) hks.push([n, where]); };
+  addHk(S.menuKey, 'اختصار القائمة');
+  if (!hkLine(S.menuKey)) W.push('اختصار القائمة فاضي، بيُستخدم F9.');
+  if (S.media.enabled) { addHk(S.media.next, 'الموسيقى: التالي'); addHk(S.media.prev, 'الموسيقى: السابق'); addHk(S.media.play, 'الموسيقى: تشغيل/إيقاف'); }
+  if (S.overlay.enabled) addHk(S.overlay.toggleKey, 'إظهار الشريط');
+  S.groups.forEach((g, i) => {
+    const where = 'مجموعة روابط ' + (i + 1);
+    if (!hkLine(g.trigger)) W.push(where + ': ما لها اختصار، فما راح تنضاف.');
+    else if (g.kind === 'hotstring') { if (/[:\s]/.test(g.trigger.trim())) W.push(where + ': النص فيه مسافة أو نقطتين (:)، وهذا ما يشتغل.'); hss.push([g.trigger.trim(), where]); }
+    else addHk(g.trigger, where);
+    if (!splitTargets(g.targets).length) W.push(where + ': ما فيها روابط.');
+  });
+  S.snippets.forEach((s, i) => {
+    const where = 'نص جاهز ' + (i + 1);
+    if (!hkLine(s.trigger)) W.push(where + ': ما له اختصار، فما راح ينضاف.');
+    else if (s.kind === 'hotstring') { if (/[:\s]/.test(s.trigger.trim())) W.push(where + ': النص فيه مسافة أو نقطتين (:)، وهذا ما يشتغل.'); hss.push([s.trigger.trim(), where]); }
+    else addHk(s.trigger, where);
+    if (!String(s.text || '').length) W.push(where + ': النص فاضي.');
+  });
+  const GEN_FUNCS = ['ShowMainMenu', 'ClearTip', 'Notify', 'ShowTip', 'IsUrl', 'OpenTarget', 'ToggleScript', 'OpenGroup', 'PasteText', 'UpdateStatusOverlay', 'StartupLnk', 'ToggleStartup'];
+  String(S.custom || '').split('\n').forEach(l => {
+    let m;
+    if ((m = l.match(/^:([^:\n]*):(.+?)::/))) hss.push([m[2].trim(), 'الكود الإضافي']);
+    else if ((m = l.match(/^([^\s"'(){};:,][^\s:"'()]*(?:\s+&\s+[^\s:]+)?)::/))) addHk(m[1], 'الكود الإضافي');
+    else if ((m = l.match(/^([A-Za-z_]\w*)\(/)) && GEN_FUNCS.includes(m[1]) && /\)\s*(\{|=>)?\s*$/.test(l)) W.push('الكود الإضافي فيه وظيفة اسمها ' + m[1] + '() وهذا الاسم مستخدم في المنظّم. غيّر اسمها.');
+  });
+  const seen = new Map();
+  hks.forEach(([n, where]) => { if (seen.has(n)) W.push('نفس الاختصار مستخدم مرتين: ' + seen.get(n) + ' و' + where + '.'); else seen.set(n, where); });
+  const seenS = new Map();
+  hss.forEach(([n, where]) => { if (seenS.has(n)) W.push('نفس النص مستخدم مرتين: ' + seenS.get(n) + ' و' + where + '.'); else seenS.set(n, where); });
+
+  S.scripts.forEach((x, i) => { if (!one(x.label) || !String(x.path || '').trim()) W.push('السكربت ' + (i + 1) + ': ناقصه الاسم أو المسار، فما راح ينضاف.'); });
+  const names = new Map();
+  const addName = (n, where) => { if (!n) return; if (names.has(n)) W.push('اسم مكرر في القائمة الرئيسية: "' + n.replace('\u200E', '') + '". ويندوز ما يقبل اسمين متطابقين.'); else names.set(n, where); };
+  validScripts().forEach(x => addName(scriptMenuName(x)));
+  S.submenus.forEach((m, i) => {
+    if (!one(m.title)) W.push('القائمة الفرعية ' + (i + 1) + ': ما لها عنوان، فما راح تنضاف.');
+    else if (!validItems(m).some(it => one(it.label) !== '-')) W.push('القائمة "' + one(m.title) + '" فاضية، فما راح تنضاف.');
+    addName(one(m.title));
+    const inner = new Set();
+    m.items.forEach(it => {
+      const lab = one(it.label);
+      if (lab && lab !== '-' && !String(it.target || '').trim()) W.push('العنصر "' + lab + '" في "' + (one(m.title) || 'قائمة بدون عنوان') + '" ما له رابط أو مسار.');
+      if (lab && lab !== '-') { if (inner.has(lab)) W.push('اسم مكرر داخل "' + one(m.title) + '": "' + lab + '".'); inner.add(lab); }
+    });
+  });
+  if (S.overlay.enabled && !Object.values(S.overlay.fields).some(Boolean)) W.push('الشريط العائم مفعّل بس ما اخترت أي معلومة تظهر فيه.');
+  return W;
+}
+
+/* ============================================================
+   العرض: تلوين الكود + المعاينة
+   ============================================================ */
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function highlight(code) {
+  const re = /(^[ \t]*;.*$|[ \t];.*$)|("(?:[^"`\n]|`.)*"|'(?:[^'`\n]|`.)*')|(^#\w+)|(^:[^:\n]*:[^\n]*?::|^[^\s;"{}(][^\n]*?::(?=\s*\{?\s*$))|\b(if|else|for|in|return|try|catch|global|static|Loop|Parse|break|true|false|Persistent)\b|\b([A-Za-z_]\w*)(?=\()/gm;
+  let out = '', last = 0;
+  code.replace(re, (m, c, s, d, hk, kw, fn, off) => {
+    out += esc(code.slice(last, off));
+    const cls = c ? 'c' : s ? 's' : d ? 'd' : hk ? 'h' : kw ? 'k' : 'f';
+    out += '<span class="t-' + cls + '">' + esc(m) + '</span>';
+    last = off + m.length; return m;
+  });
+  return out + esc(code.slice(last));
+}
+const running = new Set();
+function renderPreview() {
+  const box = $('#preview'); box.replaceChildren();
+  box.append(h('p', {}, 'هذي القائمة اللي تطلع عند ضغط ', h('b', { text: prettyHotkey(S.menuKey) || 'F9' }), '. اضغط على السكربتات لتجرب علامة التشغيل، وعلى القوائم الفرعية لتفتحها.'));
+  const menu = h('div', { class: 'ctx' });
+  const scripts = validScripts(); const subs = validSubmenus(); const extras = EXTRAS.filter(([k]) => S.extras[k]);
+  scripts.forEach(x => {
+    const key = scriptMenuName(x);
+    menu.append(h('div', { class: 'mi', role: 'button', tabindex: '0', onclick: () => { running.has(key) ? running.delete(key) : running.add(key); renderPreview(); } },
+      h('span', { class: 'chk', text: running.has(key) ? '✓' : '' }), h('span', { class: 'mt' }, one(x.label), x.suffix ? h('span', { class: 'sfx', text: ' ' + x.suffix }) : null)));
+  });
+  if (scripts.length && subs.length) menu.append(h('div', { class: 'sep' }));
+  subs.forEach((m, i) => {
+    const sub = h('div', { class: 'subbox', hidden: true });
+    validItems(m).forEach(it => sub.append(one(it.label) === '-' ? h('div', { class: 'sep' }) : h('div', { class: 'mi', title: normTarget(it.target) }, h('span', { class: 'chk' }), h('span', { class: 'mt', text: one(it.label) }))));
+    const arr = h('span', { class: 'arr', text: '‹' });
+    menu.append(h('div', { class: 'mi', role: 'button', tabindex: '0', 'aria-expanded': 'false', onclick: e => { sub.hidden = !sub.hidden; e.currentTarget.setAttribute('aria-expanded', String(!sub.hidden)); arr.textContent = sub.hidden ? '‹' : '⌄'; } },
+      h('span', { class: 'chk' }), h('span', { class: 'mt', text: one(m.title) }), arr), sub);
+  });
+  if (extras.length && (scripts.length || subs.length)) menu.append(h('div', { class: 'sep' }));
+  extras.forEach(([, lab]) => menu.append(h('div', { class: 'mi' }, h('span', { class: 'chk' }), h('span', { class: 'mt', text: lab }))));
+  if (!scripts.length && !subs.length && !extras.length) menu.append(h('div', { class: 'mi' }, h('span', { class: 'mt', text: '(القائمة فاضية)' })));
+  box.append(menu);
+}
+function renderHero() {
+  $('#heroCaps').replaceChildren(...renderCaps(S.menuKey || 'F9'));
+}
+
+let genTimer = null; let lastCode = '';
+function changed() { saveDraft(); clearTimeout(genTimer); genTimer = setTimeout(refresh, 120); }
+function refresh() {
+  lastCode = gen();
+  $('#code').innerHTML = highlight(lastCode.replace(/^(; @organizer-settings v2 ).+$/m, '$1…'));
+  const lines = lastCode.split('\n').length;
+  $('#stats').textContent = lines + ' سطر';
+  const warns = $('#warns'); warns.replaceChildren(...validate().map(t => h('li', { text: t })));
+  if (!$('#preview').hidden) renderPreview();
+  if (current === 'overlay') { renderOvPreview(); secOverlay.place && secOverlay.place(); }
+  renderHero();
+  $('#brandName').textContent = BRAND.name;
+}
+
+/* ============================================================
+   التبويبات
+   ============================================================ */
+function showTab(which) {
+  const code = which === 'code';
+  $('#tabCode').setAttribute('aria-selected', String(code)); $('#tabPrev').setAttribute('aria-selected', String(!code));
+  $('#code').hidden = !code; $('#preview').hidden = code;
+  if (!code) renderPreview();
+}
+$('#tabCode').onclick = () => showTab('code');
+$('#tabPrev').onclick = () => showTab('prev');
+
+/* ============================================================
+   النسخ والتنزيل
+   ============================================================ */
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  try {
+    const ta = h('textarea', { style: 'position:fixed;opacity:0' }); ta.value = text; document.body.append(ta); ta.select();
+    const ok = document.execCommand('copy'); ta.remove(); return ok;
+  } catch { return false; }
+}
+$('#copyBtn').onclick = async () => { toast(await copyText(lastCode) ? 'تم نسخ الكود' : 'تعذّر النسخ، حدّد الكود وانسخه يدوياً'); };
+
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(); const parts = []; const central = []; let off = 0;
+  const d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const nb = enc.encode(f.name); const crc = crc32(f.data); const size = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true);
+    lh.setUint16(26, nb.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nb, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true);
+    ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nb);
+    off += 30 + nb.length + size;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cdSize, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: 'application/zip' });
+}
+const asciiName = () => ($('#fileName').value || '').replace(/\.ahk$/i, '').replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'MyOrganizer';
+const withCrlf = s => '\uFEFF' + s.replace(/\r?\n/g, '\r\n');
+
+let DL = null; const HOSTED = !!(window.claude && typeof window.claude.use === 'function');
+(async () => {
+  if (!HOSTED) return;
+  try { DL = await window.claude.use('downloads'); } catch { DL = null; }
+  updateDlBtn();
+})();
+function updateDlBtn() {
+  const b = $('#dlBtn');
+  if (!HOSTED) { b.textContent = 'تنزيل ملف ‎.ahk'; b.hidden = false; return; }
+  b.hidden = !DL; b.textContent = 'تنزيل (ZIP)';
+  $('#exportBtn').hidden = !DL;
+}
+updateDlBtn();
+
+function blobDownload(blob, name) {
+  const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+async function saveFile(name, data) {
+  if (DL) {
+    try { await DL.save({ filename: name, data }); toast('تم التنزيل'); }
+    catch (e) {
+      const c = e && e.code;
+      if (c === 'declined') return;
+      toast(c === 'rate_limited' ? 'فيه نافذة تنزيل مفتوحة، أكملها أول' : 'التنزيل غير متاح هنا، استخدم «نسخ الكود»');
+    }
+  } else blobDownload(data instanceof Blob ? data : new Blob([data]), name);
+}
+$('#dlBtn').onclick = async () => {
+  const base = asciiName();
+  const code = withCrlf(lastCode);
+  if (DL) {
+    const enc = new TextEncoder();
+    const readme = withCrlf([
+      'طريقة التشغيل:',
+      '1) ثبّت AutoHotkey v2 من الموقع الرسمي autohotkey.com',
+      '2) فك الضغط، ودبل كلك على ' + base + '.ahk',
+      '3) اضغط ' + (prettyHotkey(S.menuKey) || 'F9') + ' لتظهر القائمة.',
+      '',
+      'للتشغيل مع ويندوز تلقائياً: اضغط Win+R واكتب shell:startup ثم ضع اختصاراً للملف هناك.',
+      'لتعديله لاحقاً: افتح ملف ' + base + '.ahk نفسه في ' + BRAND.name + '، الإعدادات محفوظة داخله.',
+    ].join('\n'));
+    const zip = makeZip([
+      { name: base + '.ahk', data: enc.encode(code) },
+      { name: base + '-settings.json', data: enc.encode(JSON.stringify(S, null, 2)) },
+      { name: 'README.txt', data: enc.encode(readme) },
+    ]);
+    await saveFile(base + '.zip', zip);
+  } else {
+    blobDownload(new Blob([code], { type: 'text/plain;charset=utf-8' }), base + '.ahk');
+    toast('تم تنزيل ' + base + '.ahk');
+  }
+};
+$('#exportBtn').onclick = () => saveFile(asciiName() + '-settings.json', JSON.stringify(S, null, 2));
+$('#importBtn').onclick = () => $('#importFile').click();
+$('#importFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const text = await readFileText(f);
+    if (/\.json$/i.test(f.name) || /^\s*\{/.test(text)) {
+      S = normalize(JSON.parse(text)); importReport = null; toast('تم فتح الإعدادات');
+    } else {
+      const r = parseAhk(text); S = r.state; importReport = r.report;
+      const base = f.name.replace(/\.[^.]+$/, '').replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '');
+      $('#fileName').value = (base || 'MyOrganizer') + (r.report.embedded ? '' : '-new');
+      toast(r.report.embedded ? 'تم فتح الملف' : 'تم استيراد الملف، راجع التقرير');
+    }
+    running.clear(); current = 'general'; renderAll(); changed();
+  } catch (err) { toast('ما قدرت أقرأ الملف. تأكد إنه ملف ‎.ahk‎ أو ‎.json‎'); }
+};
+$('#preset').onchange = e => {
+  const v = e.target.value; if (!v) return;
+  S = normalize(clone(PRESETS[v])); running.clear(); renderAll(); changed();
+  toast(v === 'empty' ? 'بدأت منظّم فارغ' : 'تم تحميل القالب الكامل');
+  e.target.value = '';
+};
+$('#fileName').oninput = () => saveDraft();
+
+/* ============================================================
+   استيراد ملف AHK (من هذي الأداة أو مكتوب يدوياً)
+   ============================================================ */
+const SETTINGS_TAG = '; @organizer-settings v2 ';
+function b64encode(str) {
+  const bytes = new TextEncoder().encode(str); let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64decode(b) { const bin = atob(b.trim()); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+
+function stripLineComment(line) {
+  let qc = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (qc) { if (c === '`') { i++; continue; } if (c === qc) qc = null; continue; }
+    if (c === '"' || c === "'") { qc = c; continue; }
+    if (c === '`') { i++; continue; }
+    if (c === ';' && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i).replace(/\s+$/, '');
+  }
+  return line.replace(/\s+$/, '');
+}
+function preprocess(raw) {
+  const code = [], cont = [];
+  let inBlock = false, inCont = false, prev = '';
+  raw.forEach(line => {
+    const t = line.trim();
+    if (inBlock) { code.push(''); cont.push(false); if (t.startsWith('*/') || t.endsWith('*/')) inBlock = false; return; }
+    if (inCont) { code.push(line); cont.push(true); if (t.startsWith(')')) inCont = false; return; }
+    if (t.startsWith('/*')) { inBlock = !(t.length > 3 && t.endsWith('*/')); code.push(''); cont.push(false); return; }
+    if (/^\((?![^)]*\)\s*$)/.test(t) && /(["'(,]|:=)\s*$/.test(prev)) { inCont = true; code.push(line); cont.push(true); return; }
+    const c = stripLineComment(line);
+    code.push(c); cont.push(false); if (c.trim()) prev = c.trim();
+  });
+  return { code, cont };
+}
+function braceDelta(line) {
+  let d = 0, qc = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (qc) { if (c === '`') { i++; continue; } if (c === qc) qc = null; continue; }
+    if (c === '"' || c === "'") qc = c; else if (c === '{') d++; else if (c === '}') d--;
+  }
+  return d;
+}
+function matchParen(s, open) {
+  let d = 0, qc = null;
+  for (let i = open; i < s.length; i++) {
+    const c = s[i];
+    if (qc) { if (c === '`') { i++; continue; } if (c === qc) qc = null; continue; }
+    if (c === '"' || c === "'") qc = c;
+    else if ('([{'.includes(c)) d++;
+    else if (')]}'.includes(c)) { d--; if (d === 0) return i; }
+  }
+  return -1;
+}
+function splitArgs(s) {
+  const out = []; let d = 0, qc = null, cur = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (qc) { cur += c; if (c === '`') { cur += s[++i] || ''; continue; } if (c === qc) qc = null; continue; }
+    if (c === '"' || c === "'") { qc = c; cur += c; continue; }
+    if ('([{'.includes(c)) d++; if (')]}'.includes(c)) d--;
+    if (c === ',' && d === 0) { out.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  if (cur.trim() || out.length) out.push(cur.trim());
+  return out;
+}
+function readStr(s, i) {
+  const qc = s[i]; let v = ''; let j = i + 1;
+  while (j < s.length) {
+    const c = s[j];
+    if (c === '`') { const n = s[j + 1]; v += n === 'n' ? '\n' : n === 't' ? '\t' : n === 'r' ? '' : (n ?? ''); j += 2; continue; }
+    if (c === qc) return { val: v, end: j + 1 };
+    v += c; j++;
+  }
+  return null;
+}
+function evalExpr(expr, vars) {
+  const s = String(expr || '').trim(); let i = 0, out = '', any = false, m;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c) || c === '.') { i++; continue; }
+    if (c === '"' || c === "'") { const r = readStr(s, i); if (!r) return null; out += r.val; i = r.end; any = true; continue; }
+    const rest = s.slice(i);
+    if ((m = rest.match(/^Chr\(\s*(0x[0-9a-f]+|\d+)\s*\)/i))) { out += String.fromCharCode(Number(m[1])); i += m[0].length; any = true; continue; }
+    if ((m = rest.match(/^EnvGet\(\s*["']([A-Za-z_]+)["']\s*\)/))) { out += '%' + m[1].toUpperCase() + '%'; i += m[0].length; any = true; continue; }
+    if ((m = rest.match(/^[A-Za-z_]\w*/))) {
+      const n = m[0]; const a = A_VARS.find(v => v.toLowerCase() === n.toLowerCase());
+      if (a) out += '%' + a + '%'; else if (vars && Object.prototype.hasOwnProperty.call(vars, n)) out += vars[n]; else return null;
+      i += n.length; any = true; continue;
+    }
+    return null;
+  }
+  return any ? out : null;
+}
+function portablePath(p) {
+  if (!p || /^https?:\/\//i.test(p)) return p;
+  return p
+    .replace(/^[A-Za-z]:\\Users\\[^\\]+\\(?:OneDrive[^\\]*\\)?(?:Desktop|سطح المكتب)(?=\\|$)/i, '%A_Desktop%')
+    .replace(/^[A-Za-z]:\\Users\\[^\\]+\\(?:OneDrive[^\\]*\\)?(?:Documents|المستندات)(?=\\|$)/i, '%A_MyDocuments%')
+    .replace(/^[A-Za-z]:\\Users\\[^\\]+(?=\\)/i, '%USERPROFILE%');
+}
+const KNOWN_FUNCS = new Set(['OpenURL', 'OpenApp', 'OpenPlaylist', 'HandleScript', 'NotifyGUI', 'ShowMediaToolTip', 'ClearMediaToolTip',
+  'UpdateStatusOverlay', 'GetGregorianDates', 'GetBatteryStatus', 'GetBrightnessLevel', 'GetDiskFreeSpace', 'GetCurrentKeyboardLanguage',
+  'ClearTip', 'Notify', 'ShowTip', 'IsUrl', 'OpenTarget', 'ToggleScript', 'OpenGroup', 'PasteText', 'ToAsciiDigits', 'HijriTabular',
+  'GetHijriDate', 'GetVolumeStatus', 'GetMicStatus', 'ShowMainMenu', 'StartupLnk', 'ToggleStartup']);
+const COLOR_NAMES = { white: 'FFFFFF', black: '010101', yellow: 'FFFF00', red: 'FF0000', lime: '00FF00', green: '008000', aqua: '00FFFF', blue: '0000FF', silver: 'C0C0C0', gray: '808080', fuchsia: 'FF00FF', orange: 'FFA500' };
+const OV_DETECT = {
+  date: /GregText|G\.Text|\bDate\s+:/, time: /GregNum|G\.Numeric|\bTime\s+:/, hijri: /Hijri/, uptime: /Uptime|\bUp\b/,
+  battery: /Battery/, volume: /MasterMute|GetVolumeStatus/, mic: /MicStatus|GetMicStatus/,
+  lang: /LangStr|GetCurrentKeyboardLanguage/, caps: /CapsLock/, num: /NumLock/, brightness: /Brightness/,
+  disk: /DiskStr|GetDiskFreeSpace/, clipboard: /ClipTextDisplay|\bClip\b/,
+};
+
+function parseAhk(text) {
+  const raw = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
+  const tag = raw.find(l => l.trim().startsWith(SETTINGS_TAG.trim()));
+  if (tag) {
+    try { return { state: normalize(JSON.parse(b64decode(tag.trim().slice(SETTINGS_TAG.trim().length)))), report: { embedded: true } }; } catch {}
+  }
+  const R = { moved: [], skipped: [], converted: false };
+  const { code, cont } = preprocess(raw);
+  const s = normalize(clone(BASE));
+  Object.assign(s, { scripts: [], submenus: [], groups: [], snippets: [], custom: '' });
+  s.media.enabled = false; s.overlay.enabled = false; s.startup.enabled = false;
+  s.extras = { reload: false, edit: false, exit: false, close: false, startup: false };
+  s.tray = false;
+
+  const nextNonEmpty = i => { for (let k = i + 1; k < code.length; k++) if (code[k].trim()) return k; return -1; };
+  function readBlock(i, rest) {
+    rest = (rest || '').trim();
+    let j = i, depth;
+    if (rest.startsWith('{')) depth = braceDelta(rest);
+    else if (rest) return { end: i, body: [rest] };
+    else { const n = nextNonEmpty(i); if (n < 0 || !code[n].trim().startsWith('{')) return { end: i, body: [] }; j = n; depth = braceDelta(code[n]); }
+    const body = [];
+    while (depth > 0 && j < code.length - 1) { j++; body.push(code[j]); if (!cont[j]) depth += braceDelta(code[j]); }
+    return { end: j, body };
+  }
+
+  // ---------- تقسيم الملف ----------
+  const blocks = [], top = [];
+  for (let i = 0; i < code.length; i++) {
+    const line = code[i], t = line.trim();
+    if (cont[i]) { top.push(i); continue; }
+    if (!t) continue;
+    const col0 = !/^\s/.test(line); let m;
+    if (col0 && (m = t.match(/^:([^:\n]*):(.+?)::(.*)$/))) {
+      const b = readBlock(i, m[3]); blocks.push({ kind: 'hotstring', opts: m[1], key: m[2].replace(/``/g, '`'), start: i, end: b.end, body: b.body.join('\n') }); i = b.end; continue;
+    }
+    if (col0 && (m = t.match(/^([^\s"'(){};:,][^\s:"'()]*(?:\s+&\s+[^\s:]+)?)::(.*)$/))) {
+      const b = readBlock(i, m[2]); blocks.push({ kind: 'hotkey', key: m[1], start: i, end: b.end, body: b.body.join('\n') }); i = b.end; continue;
+    }
+    if (col0 && (m = t.match(/^([A-Za-z_]\w*)\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*(\{|=>.*)?$/))) {
+      const n = nextNonEmpty(i);
+      if (m[3] && m[3].startsWith('=>')) { blocks.push({ kind: 'func', name: m[1], start: i, end: i, body: m[3] }); continue; }
+      if (m[3] === '{' || (n >= 0 && code[n].trim() === '{')) {
+        const b = readBlock(i, m[3] || ''); blocks.push({ kind: 'func', name: m[1], start: i, end: b.end, body: b.body.join('\n') }); i = b.end; continue;
+      }
+    }
+    top.push(i);
+  }
+  const rawOf = b => raw.slice(b.start, b.end + 1).join('\n');
+  const move = (b, label) => { s.custom += (s.custom ? '\n\n' : '') + rawOf(b); R.moved.push(label); };
+
+  // ---------- المتغيرات ----------
+  const vars = {};
+  top.forEach(i => {
+    if (cont[i]) return;
+    const m = code[i].trim().match(/^(?:global\s+)?([A-Za-z_]\w*)\s*:=\s*(.+)$/);
+    if (m) { const v = evalExpr(m[2], vars); if (v != null) vars[m[1]] = v; }
+  });
+  const bp = vars.BrowserPath ?? vars.ChromePath;
+  if (bp != null) s.browserPath = bp;
+
+  // ---------- العنوان (ملفات هذي الأداة) ----------
+  const gi = raw.findIndex(l => l.includes('تم إنشاؤه بواسطة'));
+  if (gi > 0) {
+    for (let k = gi - 1; k >= 0; k--) { const t = raw[k].trim(); if (!t) continue; if (t.startsWith(';')) { const [ti, au] = t.slice(1).trim().split('  |  '); s.title = ti || s.title; s.author = au || ''; } break; }
+  }
+
+  // ---------- رسالة الترحيب ----------
+  const ti = top.find(i => !cont[i] && /^ToolTip\(/.test(code[i].trim()));
+  if (ti != null) {
+    let txt = null;
+    if (cont[ti + 1]) { const ls = []; for (let k = ti + 1; k < raw.length && cont[k]; k++) ls.push(raw[k]); txt = ls.slice(1, -1).join('\n'); }
+    else { const t = code[ti].trim(); const close = matchParen(t, t.indexOf('(')); if (close > 0) txt = evalExpr(splitArgs(t.slice(t.indexOf('(') + 1, close))[0], vars); }
+    if (txt != null) {
+      const lines = txt.split('\n').map(l => l.trim()).filter(l => l && !/^[┏┗┓┛━┃\s]+$/.test(l) && !/للقائمة/.test(l));
+      s.startup = { enabled: true, text: lines[0] || 'تم تشغيل المنظّم ✅' };
+    }
+  }
+
+  // ---------- القوائم ----------
+  const menus = {}, menuOrder = [];
+  const scriptItems = [];
+  top.forEach(i => {
+    if (cont[i]) return;
+    const t = code[i].trim(); let m;
+    if ((m = t.match(/^(?:global\s+)?(\w+)\s*:=\s*Menu\(\)/))) { menus[m[1]] = []; menuOrder.push(m[1]); return; }
+    if ((m = t.match(/^A_TrayMenu\.Add\(/))) { s.tray = true; return; }
+    if (!(m = t.match(/^(\w+)\.Add\(/)) || !menus[m[1]]) return;
+    const open = t.indexOf('('); const close = matchParen(t, open); if (close < 0) return;
+    const args = splitArgs(t.slice(open + 1, close));
+    const list = menus[m[1]];
+    if (!args.length || (args.length === 1 && !args[0])) { list.push({ sep: true }); return; }
+    const label = evalExpr(args[0], vars);
+    const a1 = (args[1] || '').trim();
+    if (label == null) { if (!/^s\.Name$/.test(args[0])) R.skipped.push('عنصر قائمة اسمه غير مفهوم: ' + args[0]); return; }
+    if (menus[a1] || menuOrder.includes(a1)) { list.push({ label, sub: a1 }); return; }
+    if (a1 === 'ToggleStartup') { list.push({ label, extra: 'startup' }); return; }
+    const lam = a1.match(/^\(\s*\*\s*\)\s*=>\s*(.*)$/);
+    if (!lam) { R.skipped.push('عنصر "' + label + '" ما قدرت أفهم وش يسوي'); return; }
+    const body = lam[1].trim();
+    if (body === '""' || body === "''") { list.push({ label, extra: 'close' }); return; }
+    const cm = body.match(/^(\w+)\(/);
+    if (!cm) { list.push({ label, unknown: body }); return; }
+    const cclose = matchParen(body, body.indexOf('('));
+    const cargs = splitArgs(body.slice(body.indexOf('(') + 1, cclose));
+    const fn = cm[1];
+    if (fn === 'Reload') list.push({ label, extra: 'reload' });
+    else if (fn === 'Edit') list.push({ label, extra: 'edit' });
+    else if (fn === 'ExitApp') list.push({ label, extra: 'exit' });
+    else if (/^(OpenURL|OpenTarget|OpenApp|OpenPlaylist|Run)$/.test(fn)) {
+      const tg = evalExpr(cargs[0], vars);
+      if (tg == null) { list.push({ label, unknown: body }); return; }
+      const p = portablePath(tg); if (p !== tg) R.converted = true;
+      list.push({ label, target: p });
+    } else if (fn === 'HandleScript' || fn === 'ToggleScript') {
+      const path = evalExpr(cargs[0], vars);
+      if (path == null) { list.push({ label, unknown: body }); return; }
+      const p = portablePath(path); if (p !== path) R.converted = true;
+      list.push({ label, script: p });
+    } else list.push({ label, unknown: body });
+  });
+
+  // مصفوفة Scripts (ملفات هذي الأداة القديمة)
+  const si = top.find(i => /^global\s+Scripts\s*:=\s*\[/.test(code[i].trim()));
+  if (si != null) {
+    for (let k = si + 1; k < code.length && !/^\]/.test(code[k].trim()); k++) {
+      const om = code[k].match(/\{(.*)\}/); if (!om) continue;
+      const props = {};
+      splitArgs(om[1]).forEach(p => { const c = p.indexOf(':'); if (c > 0) props[p.slice(0, c).trim()] = p.slice(c + 1).trim(); });
+      const name = evalExpr(props.Name, vars), path = evalExpr(props.Path, vars);
+      if (name != null && path != null) scriptItems.push({ name, path: portablePath(path) });
+    }
+  }
+
+  const showBlock = blocks.find(b => b.kind !== 'func' && /\.Show\(|ShowMainMenu/.test(b.body) && !/InfoGui/.test(b.body));
+  const smFunc = blocks.find(b => b.kind === 'func' && b.name === 'ShowMainMenu');
+  let main = null;
+  const showSrc = (smFunc ? smFunc.body : '') + '\n' + (showBlock ? showBlock.body : '');
+  const shm = showSrc.match(/(\w+)\.Show\(/);
+  if (shm && menus[shm[1]]) main = shm[1];
+  if (!main) main = menuOrder.find(n => menus[n].some(x => x.sub)) || (menus.ScriptMenu ? 'ScriptMenu' : menuOrder[0]);
+
+  const splitName = n => { const k = n.indexOf('\u200E'); return k < 0 ? { label: n.trim(), suffix: '' } : { label: n.slice(0, k).trim(), suffix: n.slice(k + 1).trim() }; };
+  scriptItems.forEach(x => s.scripts.push(Object.assign(splitName(x.name), { path: x.path })));
+  const used = new Set([main]);
+  const others = { title: '⭐ أخرى', items: [] };
+  const subItems = (name, depth) => {
+    const items = [];
+    (menus[name] || []).forEach(x => {
+      if (x.sep) items.push({ label: '-', target: '' });
+      else if (x.target != null) items.push({ label: x.label, target: x.target });
+      else if (x.script != null) items.push({ label: x.label, target: x.script });
+      else if (x.sub) { used.add(x.sub); R.skipped.push('قائمة داخل قائمة ("' + x.label + '") — دمجت عناصرها في القائمة الأعلى'); items.push(...subItems(x.sub, depth + 1)); }
+      else if (x.unknown) R.skipped.push('"' + x.label + '": ' + x.unknown);
+    });
+    return items;
+  };
+  if (main) (menus[main] || []).forEach(x => {
+    if (x.sep) return;
+    if (x.script != null) s.scripts.push(Object.assign(splitName(x.label), { path: x.script }));
+    else if (x.sub) { used.add(x.sub); s.submenus.push({ title: x.label, items: subItems(x.sub, 1) }); }
+    else if (x.extra) s.extras[x.extra] = true;
+    else if (x.target != null) others.items.push({ label: x.label, target: x.target });
+    else if (x.unknown) R.skipped.push('"' + x.label + '": ' + x.unknown);
+  });
+  if (others.items.length) s.submenus.push(others);
+  menuOrder.filter(n => !used.has(n)).forEach(n => { if ((menus[n] || []).length) R.skipped.push('قائمة "' + n + '" ما كانت مربوطة بالقائمة الرئيسية'); });
+
+  // ---------- الاختصارات ----------
+  const strings = body => { const out = []; const re = /"((?:[^"`\n]|`.)*)"/g; let m; while ((m = re.exec(body))) out.push(readStr('"' + m[1] + '"', 0).val); return out; };
+  blocks.filter(b => b.kind !== 'func').forEach(b => {
+    const body = b.body; const key = b.key.trim();
+    const kind = b.kind === 'hotstring' ? 'hotstring' : 'hotkey';
+    const label = (kind === 'hotstring' ? 'النص ' : 'الاختصار ') + key;
+    if (b === showBlock) { s.menuWildcard = key.startsWith('*'); s.menuKey = key.replace(/^[*~$]+/, ''); return; }
+    if (kind === 'hotkey' && /Media_Next/.test(body)) { s.media.enabled = true; s.media.next = key; return; }
+    if (kind === 'hotkey' && /Media_Prev/.test(body)) { s.media.enabled = true; s.media.prev = key; return; }
+    if (kind === 'hotkey' && /Media_Play_Pause/.test(body)) { s.media.enabled = true; s.media.play = key; return; }
+    if (kind === 'hotkey' && /OverlayVisible|InfoGui\.(Hide|Show)/.test(body)) { s.overlay.toggleKey = key; return; }
+    const og = body.indexOf('OpenGroup(');
+    if (og >= 0) {
+      const oneLine = body.replace(/\n\s*/g, ' ');
+      const o2 = oneLine.indexOf('OpenGroup(') + 'OpenGroup('.length;
+      const arrOpen = oneLine.indexOf('[', o2), arrClose = matchParen(oneLine, arrOpen);
+      if (arrOpen >= 0 && arrClose > 0) {
+        const items = splitArgs(oneLine.slice(arrOpen + 1, arrClose)).map(x => evalExpr(x, vars)).filter(x => x != null).map(portablePath);
+        s.groups.push({ kind, trigger: key, newWindow: !/\],\s*false/.test(oneLine.slice(arrClose)), targets: items.join('\n') });
+        return;
+      }
+    }
+    const urls = strings(body).filter(x => /^https?:\/\//i.test(x));
+    if (urls.length >= 2 && /\bRun\(/.test(body)) { s.groups.push({ kind, trigger: key, newWindow: /--new-window/.test(body), targets: urls.join('\n') }); return; }
+    if (/PasteText\(/.test(body)) {
+      const oneLine = body.replace(/\n\s*/g, ' '); const p = oneLine.indexOf('PasteText(') + 9; const c = matchParen(oneLine, p);
+      const args = splitArgs(oneLine.slice(p + 1, c));
+      const txt = evalExpr(args[0], vars);
+      if (txt != null) { s.snippets.push({ kind, trigger: key, instant: true, text: txt, pre: evalExpr(args[1] || '""', vars) || '' }); return; }
+    }
+    if (/A_Clipboard\s*:=/.test(body) && /\^v/.test(body)) {
+      const local = Object.assign({}, vars);
+      body.split('\n').forEach(l => { const m = l.trim().match(/^([A-Za-z_]\w*)\s*:=\s*(.+)$/); if (m) { const v = evalExpr(m[2], local); if (v != null) local[m[1]] = v; } });
+      const am = body.match(/A_Clipboard\s*:=\s*([^\n]+)/g) || [];
+      let txt = null;
+      for (const a of am) { const v = evalExpr(a.replace(/^A_Clipboard\s*:=\s*/, ''), local); if (v) { txt = v; break; } }
+      const pre = [...body.matchAll(/Send\(\s*"((?:[^"`]|`.)*)"\s*\)/g)].map(m => m[1]).filter(x => x !== '^v')[0] || '';
+      if (txt) { s.snippets.push({ kind, trigger: key, instant: true, text: txt, pre }); return; }
+    }
+    move(b, label);
+  });
+
+  // ---------- الوظائف ----------
+  blocks.filter(b => b.kind === 'func' && !KNOWN_FUNCS.has(b.name)).forEach(b => move(b, 'الوظيفة ' + b.name + '()'));
+
+  // ---------- الشريط العائم ----------
+  const up = blocks.find(b => b.kind === 'func' && b.name === 'UpdateStatusOverlay');
+  const topText = top.map(i => code[i]).join('\n');
+  if (up || /InfoGui\s*:=\s*Gui\(/.test(topText)) {
+    const o = s.overlay; o.enabled = true;
+    const body = up ? up.body : '';
+    const ai = body.indexOf('DisplayText :=') >= 0 ? body.indexOf('DisplayText :=') : body.indexOf('InfoText.Value');
+    const part = ai >= 0 ? body.slice(ai) : body;
+    const found = OV_KEYS.map(k => [k, part.search(OV_DETECT[k])]).filter(([, i]) => i >= 0).sort((a, b) => a[1] - b[1]).map(([k]) => k);
+    if (found.length) { o.fields = allFields(false); found.forEach(k => { o.fields[k] = true; }); o.order = found.concat(OV_KEYS.filter(k => !found.includes(k))); }
+    o.icons = /"[^"\w\s]{1,3}\s/.test(part) && /📅|🔋|⏳|📋/.test(part);
+    if (/h:mm:ss tt/.test(part)) o.time24 = false;
+    let m;
+    if ((m = topText.match(/InfoGui\.SetFont\("s(\d+)(?:\s+c(\w+))?"(?:,\s*"([^"]+)")?/))) {
+      o.fontSize = Number(m[1]);
+      if (m[2]) o.color = '#' + (COLOR_NAMES[m[2].toLowerCase()] || (/^[0-9a-f]{6}$/i.test(m[2]) ? m[2] : 'FFFFFF'));
+      if (m[3] && ['Consolas', 'Cascadia Mono', 'Segoe UI'].includes(m[3])) o.font = m[3];
+    }
+    if ((m = topText.match(/AddText\("w(\d+)/))) o.width = Number(m[1]);
+    if ((m = topText.match(/WinSetTransColor\("\w+\s+(\d+)"/))) o.opacity = Number(m[1]);
+    if ((m = topText.match(/SetTimer\(UpdateStatusOverlay,\s*(\d+)\)/))) o.interval = String(m[1]);
+    if ((m = body.match(/StrLen\(\w+\)\s*>\s*(\d+)/))) o.clipMax = Number(m[1]);
+    if ((m = topText.match(/OverlayPosX\s*:=\s*([\d.]+)/))) o.px = Number(m[1]);
+    if ((m = topText.match(/OverlayPosY\s*:=\s*([\d.]+)/))) o.py = Number(m[1]);
+    if (/gx\s*:=\s*wr\b/.test(topText)) o.px = 1; else if (/gx\s*:=\s*wl\b/.test(topText) || /GuiX\s*:=\s*\d+/.test(topText)) o.px = 0;
+    if (/gy\s*:=\s*wt\b/.test(topText)) o.py = 0; else if (/gy\s*:=\s*wb\b/.test(topText) || /GuiY\s*:=\s*A_ScreenHeight/.test(topText)) o.py = 1;
+  }
+  const added = [];
+  if (!s.tray) { s.tray = true; added.push('أيقونة في شريط المهام تفتح القائمة'); }
+  if (!s.extras.startup) { s.extras.startup = true; added.push('زر «التشغيل مع ويندوز» في القائمة'); }
+  const nf = blocks.find(b => b.kind === 'func' && (b.name === 'Notify' || b.name === 'NotifyGUI'));
+  s.notify = !nf || /ToolTip/.test(nf.body);
+
+  return { state: normalize(s), report: {
+    embedded: false, scripts: s.scripts.length, submenus: s.submenus.length,
+    items: s.submenus.reduce((a, m) => a + m.items.filter(x => x.label !== '-').length, 0),
+    groups: s.groups.length, snippets: s.snippets.length, media: s.media.enabled, overlay: s.overlay.enabled,
+    moved: R.moved, skipped: R.skipped, converted: R.converted, added } };
+}
+
+let importReport = null;
+function reportBox() {
+  const r = importReport; if (!r) return null;
+  const close = h('button', { type: 'button', class: 'ib', 'aria-label': 'إغلاق', onclick: () => { importReport = null; renderEditor(); } }, '✕');
+  if (r.embedded) return h('div', { class: 'report ok' }, close, h('strong', { text: 'تم فتح الملف بكامل إعداداته.' }),
+    h('p', { text: 'هذا الملف مصنوع بهذي الأداة، فرجعت كل الإعدادات كما هي بالضبط.' }));
+  const got = [];
+  if (r.scripts) got.push(r.scripts + ' سكربت');
+  if (r.submenus) got.push(r.submenus + ' قوائم فرعية فيها ' + r.items + ' عنصر');
+  if (r.groups) got.push(r.groups + ' مجموعة روابط');
+  if (r.snippets) got.push(r.snippets + ' نص جاهز');
+  if (r.media) got.push('اختصارات الموسيقى');
+  if (r.overlay) got.push('الشريط العائم');
+  return h('div', { class: 'report' }, close,
+    h('strong', { text: 'تم استيراد الملف. راجع الإعدادات قبل ما تنزّل النسخة الجديدة.' }),
+    h('p', { text: 'فهمت: ' + (got.join('، ') || 'ولا شيء من الأقسام المعروفة') + '.' }),
+    r.converted ? h('p', { text: 'حوّلت مسارات مثل C:\\Users\\اسمك\\…\\سطح المكتب إلى %A_Desktop% عشان تشتغل على أي جهاز. مكانها ما تغيّر على جهازك.' }) : null,
+    r.added && r.added.length ? h('p', { text: 'أضفت تحسينات جديدة (تقدر تطفيها): ' + r.added.join('، ') + '.' }) : null,
+    r.moved.length ? h('p', {}, 'نقلت هذي للقسم «كود إضافي» كما هي عشان ما تضيع: ', r.moved.join('، '), '.') : null,
+    r.skipped.length ? h('details', {}, h('summary', { text: 'أشياء ما قدرت أفهمها (' + r.skipped.length + ')' }), h('ul', {}, r.skipped.map(x => h('li', { text: x })))) : null);
+}
+
+async function readFileText(f) {
+  const buf = await f.arrayBuffer();
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+  catch { return new TextDecoder('windows-1256').decode(buf); }
+}
+
+function secCustom(ed) {
+  const ta = h('textarea', { class: 'inp ltr mono', dir: 'ltr', rows: 20, spellcheck: 'false', 'aria-label': 'كود إضافي',
+    oninput: e => { S.custom = e.target.value; changed(); } });
+  ta.value = S.custom || '';
+  ta.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || e.shiftKey) return;
+    e.preventDefault(); const a = ta.selectionStart, b = ta.selectionEnd;
+    ta.value = ta.value.slice(0, a) + '    ' + ta.value.slice(b); ta.selectionStart = ta.selectionEnd = a + 4; S.custom = ta.value; changed();
+  });
+  ed.append(h('h2', { text: 'كود إضافي' }),
+    h('p', { class: 'lead', text: 'أي كود AutoHotkey v2 تكتبه هنا ينضاف كما هو في آخر الملف: اختصارات أو وظائف خاصة فيك. ولما تستورد ملف، الأجزاء اللي الأداة ما تعرفها تنحط هنا تلقائياً عشان ما تضيع.' }),
+    ta,
+    h('div', { class: 'tip' }, 'وظائف جاهزة تقدر تستخدمها: ',
+      h('code', { text: 'OpenTarget("https://…", "الاسم")' }), ' ', h('code', { text: 'Notify("رسالة")' }), ' ',
+      h('code', { text: 'PasteText("نص")' }), ' ', h('code', { text: 'OpenGroup(["رابط1", "رابط2"])' }),
+      '. والوظائف القديمة مثل ', h('code', { text: 'OpenURL' }), ' و', h('code', { text: 'NotifyGUI' }), ' تشتغل بعد.'));
+}
+
+function renderAll() { renderNav(); renderEditor(); refresh(); }
+renderAll();
+</script>
+</body>
+</html>
